@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -27,6 +24,22 @@ class _VideoVerificationScreenState extends State<VideoVerificationScreen> {
 
   VerificationController get _controller => Get.find<VerificationController>();
 
+  Future<void> _handlePickedVideo(XFile file) async {
+    final result = await showVideoCapturePreview(
+      context,
+      filePath: file.path,
+    );
+
+    if (result == null || !result.confirmed) {
+      return;
+    }
+
+    setState(() {
+      _filePath = file.path;
+      _duration = result.durationSeconds > 0 ? result.durationSeconds : 30;
+    });
+  }
+
   Future<void> _recordVideo() async {
     setState(() => _isPicking = true);
     HapticFeedback.mediumImpact();
@@ -35,25 +48,13 @@ class _VideoVerificationScreenState extends State<VideoVerificationScreen> {
         source: ImageSource.camera,
         maxDuration: const Duration(seconds: 60),
       );
-      if (file == null) return;
+      if (file == null || !mounted) return;
 
-      final confirmed = await showVideoCapturePreview(
-        context,
-        filePath: file.path,
-        durationSeconds: _duration > 0 ? _duration : 30,
-      );
+      await _handlePickedVideo(file);
 
-      if (!confirmed) {
+      if (mounted && _filePath == null) {
         await _recordVideo();
-        return;
       }
-
-      final duration = await _videoDurationSeconds(file.path);
-
-      setState(() {
-        _filePath = file.path;
-        _duration = duration;
-      });
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
@@ -63,36 +64,10 @@ class _VideoVerificationScreenState extends State<VideoVerificationScreen> {
     setState(() => _isPicking = true);
     try {
       final file = await ImagePicker().pickVideo(source: ImageSource.gallery);
-      if (file == null) return;
-
-      final confirmed = await showVideoCapturePreview(
-        context,
-        filePath: file.path,
-        durationSeconds: 30,
-      );
-
-      if (!confirmed) return;
-
-      final duration = await _videoDurationSeconds(file.path);
-
-      setState(() {
-        _filePath = file.path;
-        _duration = duration;
-      });
+      if (file == null || !mounted) return;
+      await _handlePickedVideo(file);
     } finally {
       if (mounted) setState(() => _isPicking = false);
-    }
-  }
-
-  Future<int> _videoDurationSeconds(String path) async {
-    final player = VideoPlayerController.file(File(path));
-    try {
-      await player.initialize();
-      return player.value.duration.inSeconds.clamp(1, 60);
-    } catch (_) {
-      return 30;
-    } finally {
-      await player.dispose();
     }
   }
 
@@ -240,25 +215,19 @@ class _VideoVerificationScreenState extends State<VideoVerificationScreen> {
                 ],
                 const Spacer(),
                 if (_filePath != null) ...[
-                  Expanded(
-                    flex: 1,
-                    child: SecondaryButton(
-                      label: 'Retake',
-                      icon: Icons.refresh_rounded,
-                      onPressed: () => setState(() {
-                        _filePath = null;
-                        _duration = 0;
-                      }),
-                    ),
+                  SecondaryButton(
+                    label: 'Retake',
+                    icon: Icons.refresh_rounded,
+                    onPressed: () => setState(() {
+                      _filePath = null;
+                      _duration = 0;
+                    }),
                   ),
                   SizedBox(height: 12.h),
-                  Expanded(
-                    flex: 1,
-                    child: PrimaryButton(
-                      label: 'Use video',
-                      icon: Icons.check_rounded,
-                      onPressed: _useVideo,
-                    ),
+                  PrimaryButton(
+                    label: 'Use video',
+                    icon: Icons.check_rounded,
+                    onPressed: _useVideo,
                   ),
                 ] else if (!_isPicking) ...[
                   SecondaryButton(

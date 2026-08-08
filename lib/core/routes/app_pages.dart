@@ -20,7 +20,7 @@ import '../bindings/initial_binding.dart';
 import 'app_routes.dart';
 
 class AppPages {
-  static const initial = AppRoutes.main;
+  static const initial = AppRoutes.login;
 
   static final routes = [
     GetPage(

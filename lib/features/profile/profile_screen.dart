@@ -40,7 +40,7 @@ class ProfileScreen extends GetView<ProfileController> {
                       initials: agent.avatarInitials,
                       imageUrl: agent.avatarUrl,
                       size: 88,
-                      showBorder: true,
+                    //  showBorder: true,
                     ),
                     SizedBox(height: 14.h),
                     Text(agent.name,

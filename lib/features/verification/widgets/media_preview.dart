@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/common_widgets.dart';
+import 'video_preview_player.dart';
 
 /// Shows a bottom sheet to confirm or retake a captured photo.
 Future<bool> showPhotoCapturePreview(
@@ -22,23 +22,18 @@ Future<bool> showPhotoCapturePreview(
 }
 
 /// Shows a bottom sheet to confirm or retake a captured video.
-Future<bool> showVideoCapturePreview(
+Future<VideoPreviewResult?> showVideoCapturePreview(
   BuildContext context, {
   required String filePath,
-  required int durationSeconds,
 }) async {
-  final result = await showModalBottomSheet<bool>(
+  return showModalBottomSheet<VideoPreviewResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     isDismissible: false,
     enableDrag: false,
-    builder: (context) => _VideoPreviewSheet(
-      filePath: filePath,
-      durationSeconds: durationSeconds,
-    ),
+    builder: (context) => _VideoPreviewSheet(filePath: filePath),
   );
-  return result ?? false;
 }
 
 /// Full-screen photo viewer for already captured media.
@@ -124,7 +119,7 @@ class _PhotoPreviewSheet extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    flex: 1,
+                        flex: 1,
                     child: SecondaryButton(
                       label: 'Retake',
                       icon: Icons.refresh_rounded,
@@ -151,39 +146,29 @@ class _PhotoPreviewSheet extends StatelessWidget {
 }
 
 class _VideoPreviewSheet extends StatefulWidget {
-  const _VideoPreviewSheet({
-    required this.filePath,
-    required this.durationSeconds,
-  });
+  const _VideoPreviewSheet({required this.filePath});
 
   final String filePath;
-  final int durationSeconds;
 
   @override
   State<_VideoPreviewSheet> createState() => _VideoPreviewSheetState();
 }
 
 class _VideoPreviewSheetState extends State<_VideoPreviewSheet> {
-  late final VideoPlayerController _controller;
-  bool _initialized = false;
+  final _playerKey = GlobalKey<SafeVideoPlayerState>();
+  int _durationSeconds = 0;
+  bool _playerFailed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.file(File(widget.filePath))
-      ..initialize().then((_) {
-        if (mounted) setState(() => _initialized = true);
-      });
+  void _confirm() {
+    final duration = _playerKey.currentState?.durationSeconds ?? 0;
+    Navigator.pop(
+      context,
+      VideoPreviewResult(
+        confirmed: true,
+        durationSeconds: duration > 0 ? duration : 30,
+      ),
+    );
   }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  String _fmt(int s) =>
-      '${(s ~/ 60).toString().padLeft(2, '0')}:${(s % 60).toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -218,9 +203,11 @@ class _VideoPreviewSheetState extends State<_VideoPreviewSheet> {
               ),
               SizedBox(height: 6.h),
               Text(
-                _initialized
-                    ? 'Duration: ${_fmt(_controller.value.duration.inSeconds)}'
-                    : 'Loading preview...',
+                _durationSeconds > 0
+                    ? 'Duration: ${formatVideoDuration(_durationSeconds)}'
+                    : _playerFailed
+                        ? 'Video saved — preview unavailable'
+                        : 'Loading preview...',
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: AppColors.textSecondary,
@@ -229,61 +216,33 @@ class _VideoPreviewSheetState extends State<_VideoPreviewSheet> {
               SizedBox(height: 16.h),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16.r),
-                child: AspectRatio(
-                  aspectRatio: _initialized
-                      ? _controller.value.aspectRatio
-                      : 16 / 9,
-                  child: ColoredBox(
-                    color: Colors.black,
-                    child: _initialized
-                        ? Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              VideoPlayer(_controller),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _controller.value.isPlaying
-                                        ? _controller.pause()
-                                        : _controller.play();
-                                  });
-                                },
-                                child: Container(
-                                  width: 56.w,
-                                  height: 56.w,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.45),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _controller.value.isPlaying
-                                        ? Icons.pause_rounded
-                                        : Icons.play_arrow_rounded,
-                                    color: Colors.white,
-                                    size: 32.sp,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                  ),
+                child: SafeVideoPlayer(
+                  key: _playerKey,
+                  filePath: widget.filePath,
+                  onInitialized: (controller) {
+                    setState(() {
+                      _durationSeconds =
+                          controller.value.duration.inSeconds.clamp(1, 3600);
+                    });
+                  },
+                  onFailed: () => setState(() => _playerFailed = true),
                 ),
               ),
               SizedBox(height: 20.h),
               Row(
                 children: [
                   Expanded(
-                        flex: 1,
+                         flex: 1,
                     child: SecondaryButton(
                       label: 'Retake',
                       icon: Icons.refresh_rounded,
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => Navigator.pop(
+                        context,
+                        const VideoPreviewResult(
+                          confirmed: false,
+                          durationSeconds: 0,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -292,7 +251,7 @@ class _VideoPreviewSheetState extends State<_VideoPreviewSheet> {
                     child: PrimaryButton(
                       label: 'Use video',
                       icon: Icons.check_rounded,
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: _confirm,
                     ),
                   ),
                 ],
@@ -344,7 +303,7 @@ class _FullScreenPhotoViewer extends StatelessWidget {
   }
 }
 
-class _FullScreenVideoViewer extends StatefulWidget {
+class _FullScreenVideoViewer extends StatelessWidget {
   const _FullScreenVideoViewer({
     required this.filePath,
     this.durationSeconds,
@@ -352,29 +311,6 @@ class _FullScreenVideoViewer extends StatefulWidget {
 
   final String filePath;
   final int? durationSeconds;
-
-  @override
-  State<_FullScreenVideoViewer> createState() => _FullScreenVideoViewerState();
-}
-
-class _FullScreenVideoViewerState extends State<_FullScreenVideoViewer> {
-  late final VideoPlayerController _controller;
-  bool _initialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.file(File(widget.filePath))
-      ..initialize().then((_) {
-        if (mounted) setState(() => _initialized = true);
-      });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -386,33 +322,10 @@ class _FullScreenVideoViewerState extends State<_FullScreenVideoViewer> {
         title: const Text('Video preview'),
       ),
       body: Center(
-        child: _initialized
-            ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    VideoPlayer(_controller),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _controller.value.isPlaying
-                              ? _controller.pause()
-                              : _controller.play();
-                        });
-                      },
-                      child: Icon(
-                        _controller.value.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        size: 64.sp,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : const CircularProgressIndicator(color: Colors.white),
+        child: SafeVideoPlayer(
+          filePath: filePath,
+          showPlayOverlay: true,
+        ),
       ),
     );
   }
