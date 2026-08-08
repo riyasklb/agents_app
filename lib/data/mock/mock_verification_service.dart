@@ -2,6 +2,10 @@ import '../mock/mock_data.dart';
 import '../models/models.dart';
 
 class MockVerificationService {
+  MockVerificationService();
+
+  static const demoOtp = '123456';
+
   final Map<String, VerificationSession> _sessions = {};
 
   Future<VerificationSession> startSession(String jobId) async {
@@ -9,11 +13,13 @@ class MockVerificationService {
     final session = VerificationSession(
       jobId: jobId,
       currentStep: 0,
-      totalSteps: 6,
+      totalSteps: 5,
       media: MockData.defaultMediaItems(),
       questions: MockData.defaultQuestions(),
       gpsConfirmed: false,
       gpsDistanceMeters: 0,
+      otpSent: false,
+      otpVerified: false,
       remarks: '',
       isSubmitted: false,
     );
@@ -26,10 +32,7 @@ class MockVerificationService {
     return _sessions[jobId];
   }
 
-  Future<VerificationSession> updateStep(
-    String jobId,
-    int step,
-  ) async {
+  Future<VerificationSession> updateStep(String jobId, int step) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final session = _sessions[jobId];
     if (session == null) throw Exception('Session not found');
@@ -73,6 +76,25 @@ class MockVerificationService {
     return updated;
   }
 
+  Future<VerificationSession> sendOtp(String jobId) async {
+    await Future.delayed(const Duration(milliseconds: 900));
+    final session = _sessions[jobId];
+    if (session == null) throw Exception('Session not found');
+    final updated = session.copyWith(otpSent: true);
+    _sessions[jobId] = updated;
+    return updated;
+  }
+
+  Future<bool> verifyOtp(String jobId, String otp) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (otp != demoOtp) return false;
+    final session = _sessions[jobId];
+    if (session == null) throw Exception('Session not found');
+    final updated = session.copyWith(otpVerified: true);
+    _sessions[jobId] = updated;
+    return true;
+  }
+
   Future<VerificationSession> answerQuestion(
     String jobId,
     String questionId,
@@ -90,10 +112,7 @@ class MockVerificationService {
     return updated;
   }
 
-  Future<VerificationSession> setRemarks(
-    String jobId,
-    String remarks,
-  ) async {
+  Future<VerificationSession> setRemarks(String jobId, String remarks) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final session = _sessions[jobId];
     if (session == null) throw Exception('Session not found');

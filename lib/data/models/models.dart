@@ -211,6 +211,8 @@ class VerificationSession {
     required this.questions,
     required this.gpsConfirmed,
     required this.gpsDistanceMeters,
+    required this.otpSent,
+    required this.otpVerified,
     required this.remarks,
     required this.isSubmitted,
   });
@@ -222,6 +224,8 @@ class VerificationSession {
   final List<VerificationQuestion> questions;
   final bool gpsConfirmed;
   final double gpsDistanceMeters;
+  final bool otpSent;
+  final bool otpVerified;
   final String remarks;
   final bool isSubmitted;
 
@@ -233,6 +237,8 @@ class VerificationSession {
     List<VerificationQuestion>? questions,
     bool? gpsConfirmed,
     double? gpsDistanceMeters,
+    bool? otpSent,
+    bool? otpVerified,
     String? remarks,
     bool? isSubmitted,
   }) {
@@ -244,6 +250,8 @@ class VerificationSession {
       questions: questions ?? this.questions,
       gpsConfirmed: gpsConfirmed ?? this.gpsConfirmed,
       gpsDistanceMeters: gpsDistanceMeters ?? this.gpsDistanceMeters,
+      otpSent: otpSent ?? this.otpSent,
+      otpVerified: otpVerified ?? this.otpVerified,
       remarks: remarks ?? this.remarks,
       isSubmitted: isSubmitted ?? this.isSubmitted,
     );

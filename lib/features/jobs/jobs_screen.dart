@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
@@ -24,19 +25,38 @@ class JobsScreen extends GetView<JobsController> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
-            child: Text(
-              'Jobs',
-              style: TextStyle(
-                fontSize: 26.sp,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
+            child: Obx(() {
+              final count = controller.tabIndex.value == 0
+                  ? controller.filteredAvailable.length
+                  : _tabCount(controller, controller.tabIndex.value);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Jobs',
+                    style: TextStyle(
+                      fontSize: 26.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '$count ${_tabSubtitle(controller.tabIndex.value)}',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              );
+            }),
           ),
-          SizedBox(height: 16.h),
-          _SegmentedTabs(controller: controller.tabController),
-          SizedBox(height: 16.h),
+          SizedBox(height: 18.h),
+          _SegmentedTabs(controller: controller),
+          SizedBox(height: 14.h),
           Expanded(
             child: TabBarView(
               controller: controller.tabController,
@@ -52,59 +72,111 @@ class JobsScreen extends GetView<JobsController> {
       ),
     );
   }
+
+  int _tabCount(JobsController c, int index) => switch (index) {
+        0 => c.filteredAvailable.length,
+        1 => c.activeJobs.length,
+        2 => c.submittedJobs.length,
+        3 => c.completedJobs.length,
+        _ => 0,
+      };
+
+  String _tabSubtitle(int index) => switch (index) {
+        0 => 'assignments available',
+        1 => 'in progress',
+        2 => 'awaiting review',
+        3 => 'completed',
+        _ => 'assignments',
+      };
 }
 
 class _SegmentedTabs extends StatelessWidget {
   const _SegmentedTabs({required this.controller});
 
-  final TabController controller;
+  final JobsController controller;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
+      animation: controller.tabController,
       builder: (context, _) {
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Container(
+            height: 44.h,
             padding: EdgeInsets.all(4.w),
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(14.r),
+              color: AppColors.surfaceVariant.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               children: List.generate(JobsController.tabLabels.length, (index) {
-                final selected = controller.index == index;
+                final selected = controller.tabController.index == index;
+                final count = _countForTab(controller, index);
                 return Expanded(
                   child: GestureDetector(
-                    onTap: () => controller.animateTo(index),
+                    onTap: () => controller.tabController.animateTo(index),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
+                      duration: const Duration(milliseconds: 260),
                       curve: Curves.easeOutCubic,
-                      padding: EdgeInsets.symmetric(vertical: 9.h),
                       decoration: BoxDecoration(
                         color: selected ? AppColors.surface : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 8.r,
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 10.r,
                                   offset: Offset(0, 2.h),
                                 ),
                               ]
                             : null,
                       ),
-                      child: Text(
-                        JobsController.tabLabels[index],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                          color: selected
-                              ? AppColors.textPrimary
-                              : AppColors.textTertiary,
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              JobsController.tabLabels[index],
+                              style: TextStyle(
+                                fontSize: 11.5.sp,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: selected
+                                    ? AppColors.textPrimary
+                                    : AppColors.textTertiary,
+                              ),
+                            ),
+                            if (count > 0) ...[
+                              SizedBox(width: 5.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 5.w,
+                                  vertical: 1.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.accent.withValues(alpha: 0.12)
+                                      : AppColors.border,
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Text(
+                                  '$count',
+                                  style: TextStyle(
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: selected
+                                        ? AppColors.accent
+                                        : AppColors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
@@ -117,6 +189,14 @@ class _SegmentedTabs extends StatelessWidget {
       },
     );
   }
+
+  int _countForTab(JobsController c, int index) => switch (index) {
+        0 => c.availableJobs.length,
+        1 => c.activeJobs.length,
+        2 => c.submittedJobs.length,
+        3 => c.completedJobs.length,
+        _ => 0,
+      };
 }
 
 class _AvailableTab extends GetView<JobsController> {
@@ -129,20 +209,28 @@ class _AvailableTab extends GetView<JobsController> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Container(
+            height: 46.h,
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.8),
+                color: AppColors.border.withValues(alpha: 0.65),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.03),
+                  blurRadius: 12.r,
+                  offset: Offset(0, 4.h),
+                ),
+              ],
             ),
             child: TextField(
               onChanged: controller.setSearch,
               style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Search jobs...',
+                hintText: 'Search by name or location',
                 hintStyle: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   color: AppColors.textTertiary,
                 ),
                 prefixIcon: Icon(
@@ -158,7 +246,7 @@ class _AvailableTab extends GetView<JobsController> {
         ),
         SizedBox(height: 12.h),
         SizedBox(
-          height: 34.h,
+          height: 32.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -172,21 +260,22 @@ class _AvailableTab extends GetView<JobsController> {
                   onTap: () => controller.toggleFilter(filter),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: selected ? AppColors.primary : AppColors.surface,
+                      gradient: selected ? AppColors.primaryGradient : null,
+                      color: selected ? null : AppColors.surface,
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(
                         color: selected
-                            ? AppColors.primary
-                            : AppColors.border.withValues(alpha: 0.8),
+                            ? Colors.transparent
+                            : AppColors.border.withValues(alpha: 0.7),
                       ),
                     ),
                     child: Text(
                       filter,
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
                         color: selected ? Colors.white : AppColors.textSecondary,
                       ),
@@ -197,7 +286,7 @@ class _AvailableTab extends GetView<JobsController> {
             },
           ),
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 14.h),
         Expanded(
           child: GetBuilder<JobsController>(
             id: 'available',
@@ -207,8 +296,8 @@ class _AvailableTab extends GetView<JobsController> {
               if (jobs.isEmpty) {
                 return const EmptyState(
                   icon: Icons.work_off_outlined,
-                  title: 'No available jobs',
-                  subtitle: 'Try adjusting your filters or check back later.',
+                  title: 'No assignments found',
+                  subtitle: 'Adjust filters or check back soon.',
                 );
               }
               return RefreshIndicator(
@@ -222,7 +311,7 @@ class _AvailableTab extends GetView<JobsController> {
                     LayoutConstants.scrollBottomPadding(context),
                   ),
                   itemCount: jobs.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
                   itemBuilder: (_, i) {
                     final job = jobs[i];
                     return Obx(
@@ -236,7 +325,10 @@ class _AvailableTab extends GetView<JobsController> {
                         onAccept: () => c.acceptJob(job.id),
                         onReject: () => c.rejectJob(job.id),
                       ),
-                    );
+                    )
+                        .animate()
+                        .fadeIn(delay: Duration(milliseconds: 50 * i))
+                        .slideY(begin: 0.04, end: 0);
                   },
                 ),
               );
@@ -255,14 +347,18 @@ class _ActiveTab extends GetView<JobsController> {
   Widget build(BuildContext context) {
     return _JobStatusList(
       jobs: controller.activeJobs,
-      emptyTitle: 'No active jobs',
-      emptySubtitle: 'Accept a job to get started.',
-      itemBuilder: (job) => StatusJobTile(
+      emptyTitle: 'No active assignments',
+      emptySubtitle: 'Accept a job to begin verification.',
+      itemBuilder: (job, i) => StatusJobTile(
         job: job,
         statusLabel: job.status == JobStatus.inProgress ? 'In progress' : 'Active',
         statusColor: AppColors.accent,
+        actionLabel: 'Continue →',
         onTap: () => Get.toNamed(AppRoutes.verification, arguments: job.id),
-      ),
+      )
+          .animate()
+          .fadeIn(delay: Duration(milliseconds: 50 * i))
+          .slideY(begin: 0.04, end: 0),
     );
   }
 }
@@ -274,14 +370,17 @@ class _SubmittedTab extends GetView<JobsController> {
   Widget build(BuildContext context) {
     return _JobStatusList(
       jobs: controller.submittedJobs,
-      emptyTitle: 'No submitted jobs',
-      emptySubtitle: 'Completed verifications will appear here.',
-      itemBuilder: (job) => StatusJobTile(
+      emptyTitle: 'Nothing submitted yet',
+      emptySubtitle: 'Finished verifications will appear here.',
+      itemBuilder: (job, i) => StatusJobTile(
         job: job,
-        statusLabel: 'Submitted',
+        statusLabel: 'Under review',
         statusColor: AppColors.warning,
         onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
-      ),
+      )
+          .animate()
+          .fadeIn(delay: Duration(milliseconds: 50 * i))
+          .slideY(begin: 0.04, end: 0),
     );
   }
 }
@@ -294,11 +393,14 @@ class _CompletedTab extends GetView<JobsController> {
     return _JobStatusList(
       jobs: controller.completedJobs,
       emptyTitle: 'No completed jobs',
-      emptySubtitle: 'Your finished assignments will show here.',
-      itemBuilder: (job) => CompletedJobTile(
+      emptySubtitle: 'Your earnings history starts here.',
+      itemBuilder: (job, i) => CompletedJobTile(
         job: job,
         onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
-      ),
+      )
+          .animate()
+          .fadeIn(delay: Duration(milliseconds: 50 * i))
+          .slideY(begin: 0.04, end: 0),
     );
   }
 }
@@ -314,7 +416,7 @@ class _JobStatusList extends GetView<JobsController> {
   final RxList<VerificationJob> jobs;
   final String emptyTitle;
   final String emptySubtitle;
-  final Widget Function(VerificationJob job) itemBuilder;
+  final Widget Function(VerificationJob job, int index) itemBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -333,13 +435,13 @@ class _JobStatusList extends GetView<JobsController> {
         child: ListView.separated(
           padding: EdgeInsets.fromLTRB(
             20.w,
-            0,
+            4.h,
             20.w,
             LayoutConstants.scrollBottomPadding(context),
           ),
           itemCount: jobs.length,
-          separatorBuilder: (_, __) => SizedBox(height: 10.h),
-          itemBuilder: (_, i) => itemBuilder(jobs[i]),
+          separatorBuilder: (_, __) => SizedBox(height: 12.h),
+          itemBuilder: (_, i) => itemBuilder(jobs[i], i),
         ),
       );
     });
@@ -362,12 +464,12 @@ class _JobsListSkeleton extends StatelessWidget {
           LayoutConstants.scrollBottomPadding(context),
         ),
         itemCount: 4,
-        separatorBuilder: (_, __) => SizedBox(height: 10.h),
+        separatorBuilder: (_, __) => SizedBox(height: 12.h),
         itemBuilder: (_, __) => Container(
-          height: 120.h,
+          height: 148.h,
           decoration: BoxDecoration(
             color: AppColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(20.r),
           ),
         ),
       ),

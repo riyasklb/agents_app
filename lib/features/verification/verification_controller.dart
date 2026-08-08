@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/services/app_services.dart';
@@ -13,16 +14,34 @@ class VerificationController extends GetxController {
 
   final isLoading = true.obs;
   final isSubmitting = false.obs;
+  final isVerifyingOtp = false.obs;
+  final isSendingOtp = false.obs;
+  final otpError = RxnString();
   final session = Rxn<VerificationSession>();
   final job = Rxn<VerificationJob>();
 
   static const steps = [
-    'Applicant',
-    'Identity',
-    'Address',
-    'Media',
-    'Questions',
+    'Overview',
+    'Arrive',
+    'Photos',
+    'Verify',
     'Submit',
+  ];
+
+  static const stepDescriptions = [
+    'Review assignment details',
+    'Confirm location & verify OTP',
+    'Capture required documents',
+    'Record video & answer questions',
+    'Review and submit report',
+  ];
+
+  static const photoMediaIds = [
+    'media-001',
+    'media-002',
+    'media-003',
+    'media-004',
+    'media-005',
   ];
 
   @override
@@ -41,15 +60,62 @@ class VerificationController extends GetxController {
     }
   }
 
-  Future<void> nextStep() async {
+  bool get canProceed {
     final s = session.value;
-    if (s == null || s.currentStep >= 5) return;
+    if (s == null) return false;
+    return switch (s.currentStep) {
+      0 => true,
+      1 => s.gpsConfirmed && s.otpVerified,
+      2 => _photosComplete(s),
+      3 => _videoComplete(s) && _questionsComplete(s),
+      4 => true,
+      _ => false,
+    };
+  }
+
+  String? get continueBlockReason {
+    final s = session.value;
+    if (s == null) return null;
+    return switch (s.currentStep) {
+      1 when !s.gpsConfirmed => 'Confirm your arrival at the location',
+      1 when !s.otpVerified => 'Enter the OTP sent to the applicant',
+      2 when !_photosComplete(s) => 'Capture all required photos',
+      3 when !_videoComplete(s) => 'Record the verification video',
+      3 when !_questionsComplete(s) => 'Answer all verification questions',
+      _ => null,
+    };
+  }
+
+  bool _photosComplete(VerificationSession s) =>
+      photoMediaIds.every((id) => s.media.any((m) => m.id == id && m.isCaptured));
+
+  bool _videoComplete(VerificationSession s) =>
+      s.media.any((m) => m.id == 'media-006' && m.isCaptured);
+
+  bool _questionsComplete(VerificationSession s) =>
+      s.questions.every((q) => q.answer != null);
+
+  int get capturedPhotoCount {
+    final s = session.value;
+    if (s == null) return 0;
+    return photoMediaIds
+        .where((id) => s.media.any((m) => m.id == id && m.isCaptured))
+        .length;
+  }
+
+  Future<void> nextStep() async {
+    if (!canProceed) return;
+    final s = session.value;
+    if (s == null || s.currentStep >= 4) return;
     session.value =
         await AppServices.verification.updateStep(jobId, s.currentStep + 1);
   }
 
-  Future<void> goToStep(int step) async {
-    session.value = await AppServices.verification.updateStep(jobId, step);
+  Future<void> previousStep() async {
+    final s = session.value;
+    if (s == null || s.currentStep <= 0) return;
+    session.value =
+        await AppServices.verification.updateStep(jobId, s.currentStep - 1);
   }
 
   Future<void> captureMedia(String mediaId, {int? durationSeconds}) async {
@@ -62,6 +128,34 @@ class VerificationController extends GetxController {
 
   Future<void> confirmGps() async {
     session.value = await AppServices.verification.confirmGps(jobId);
+    if (session.value?.gpsConfirmed == true && session.value?.otpSent != true) {
+      await sendOtp();
+    }
+  }
+
+  Future<void> sendOtp() async {
+    isSendingOtp.value = true;
+    otpError.value = null;
+    try {
+      session.value = await AppServices.verification.sendOtp(jobId);
+    } finally {
+      isSendingOtp.value = false;
+    }
+  }
+
+  Future<void> verifyOtp(String otp) async {
+    isVerifyingOtp.value = true;
+    otpError.value = null;
+    try {
+      final valid = await AppServices.verification.verifyOtp(jobId, otp);
+      if (!valid) {
+        otpError.value = 'Invalid OTP. Please try again.';
+        return;
+      }
+      session.value = await AppServices.verification.getSession(jobId);
+    } finally {
+      isVerifyingOtp.value = false;
+    }
   }
 
   Future<void> answerQuestion(String questionId, bool answer) async {
@@ -79,8 +173,7 @@ class VerificationController extends GetxController {
   Future<void> submit() async {
     isSubmitting.value = true;
     try {
-      session.value =
-          await AppServices.verification.submitVerification(jobId);
+      session.value = await AppServices.verification.submitVerification(jobId);
       await AppServices.jobs.submitJob(jobId);
       if (Get.isRegistered<JobsController>()) {
         await Get.find<JobsController>().loadAll();
@@ -94,5 +187,11 @@ class VerificationController extends GetxController {
     } finally {
       isSubmitting.value = false;
     }
+  }
+
+  String maskedApplicantPhone() {
+    final phone = job.value?.applicant.phone ?? '';
+    if (phone.length < 4) return '••••';
+    return '•••• ${phone.substring(phone.length - 4)}';
   }
 }

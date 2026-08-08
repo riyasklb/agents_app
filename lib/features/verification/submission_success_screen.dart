@@ -39,11 +39,14 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: PremiumBackground(
         child: SafeArea(
           child: Obx(() {
             if (_loading.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.accent),
+              );
             }
             final job = _job.value;
             if (job == null) {
@@ -58,7 +61,7 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
               child: Column(
                 children: [
                   const Spacer(),
-                  const SuccessCheckmark(size: 120)
+                  const SuccessCheckmark(size: 110)
                       .animate()
                       .scale(
                         begin: const Offset(0, 0),
@@ -66,39 +69,86 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
                         curve: Curves.elasticOut,
                         duration: 700.ms,
                       ),
-                  SizedBox(height: 32.h),
-                  Text('Verification Submitted',
-                      style: TextStyle(
-                          fontSize: 24.sp, fontWeight: FontWeight.w800)),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 28.h),
                   Text(
-                    'Your report has been submitted for bank review.',
+                    'Report submitted',
+                    style: TextStyle(
+                      fontSize: 26.sp,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ).animate().fadeIn(delay: 200.ms),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Your verification is under bank review',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  SizedBox(height: 32.h),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ).animate().fadeIn(delay: 280.ms),
+                  SizedBox(height: 28.h),
                   GlassCard(
+                    padding: EdgeInsets.all(20.w),
                     child: Column(
                       children: [
-                        _Row(label: 'Application ID', value: job.applicationId),
-                        Divider(height: 24.h),
-                        _Row(
+                        Row(
+                          children: [
+                            AvatarWidget(
+                              initials: job.applicant.initials,
+                              imageUrl: job.applicant.avatarUrl,
+                              size: 48,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    job.applicant.name,
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    job.loanType.label,
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        Divider(color: AppColors.border.withValues(alpha: 0.6)),
+                        SizedBox(height: 16.h),
+                        _SummaryRow(
+                          label: 'Application ID',
+                          value: job.applicationId,
+                        ),
+                        SizedBox(height: 12.h),
+                        _SummaryRow(
                           label: 'Commission',
                           value: Formatters.currency(job.commission),
                           valueColor: AppColors.success,
                         ),
-                        Divider(height: 24.h),
-                        const _Row(
+                        SizedBox(height: 12.h),
+                        const _SummaryRow(
                           label: 'Status',
-                          value: 'Under Review',
+                          value: 'Under review',
                           valueColor: AppColors.warning,
                         ),
                       ],
                     ),
-                  ),
+                  ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.06, end: 0),
                   const Spacer(),
                   PrimaryButton(
-                    label: 'Back to Jobs',
+                    label: 'Back to jobs',
+                    icon: Icons.work_outline_rounded,
                     onPressed: () {
                       Get.offAllNamed(AppRoutes.main);
                       Get.find<MainController>().changeTab(1);
@@ -115,12 +165,13 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
   }
 }
 
-class _Row extends StatelessWidget {
-  const _Row({
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
     required this.label,
     required this.value,
     this.valueColor,
   });
+
   final String label;
   final String value;
   final Color? valueColor;
@@ -130,10 +181,21 @@ class _Row extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label),
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.w600, color: valueColor)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13.sp,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            color: valueColor ?? AppColors.textPrimary,
+          ),
+        ),
       ],
     );
   }
