@@ -1,7 +1,9 @@
+import '../../data/mock/mock_assignment_service.dart';
 import '../../data/mock/mock_auth_service.dart';
 import '../../data/mock/mock_earnings_service.dart';
 import '../../data/mock/mock_job_service.dart';
 import '../../data/mock/mock_notification_service.dart';
+import '../../data/mock/mock_preferences_service.dart';
 import '../../data/mock/mock_verification_service.dart';
 
 class AppServices {
@@ -12,4 +14,6 @@ class AppServices {
   static final verification = MockVerificationService();
   static final earnings = MockEarningsService();
   static final notifications = MockNotificationService();
+  static final preferences = MockPreferencesService();
+  static final assignment = MockAssignmentService();
 }

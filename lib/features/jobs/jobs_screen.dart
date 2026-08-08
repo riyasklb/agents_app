@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/constants/layout_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/location_picker.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/models.dart';
@@ -33,7 +34,7 @@ class JobsScreen extends GetView<JobsController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Jobs',
+                    'Verifications',
                     style: TextStyle(
                       fontSize: 26.sp,
                       fontWeight: FontWeight.w800,
@@ -41,7 +42,9 @@ class JobsScreen extends GetView<JobsController> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 8.h),
+                  const LocationPickerChip(compact: true),
+                  SizedBox(height: 8.h),
                   Text(
                     '$count ${_tabSubtitle(controller.tabIndex.value)}',
                     style: TextStyle(
@@ -75,9 +78,9 @@ class JobsScreen extends GetView<JobsController> {
 
   int _tabCount(JobsController c, int index) => switch (index) {
         0 => c.filteredAvailable.length,
-        1 => c.activeJobs.length,
-        2 => c.submittedJobs.length,
-        3 => c.completedJobs.length,
+        1 => c.filteredActive.length,
+        2 => c.filteredSubmitted.length,
+        3 => c.filteredCompleted.length,
         _ => 0,
       };
 
@@ -191,10 +194,10 @@ class _SegmentedTabs extends StatelessWidget {
   }
 
   int _countForTab(JobsController c, int index) => switch (index) {
-        0 => c.availableJobs.length,
-        1 => c.activeJobs.length,
-        2 => c.submittedJobs.length,
-        3 => c.completedJobs.length,
+        0 => c.filteredAvailable.length,
+        1 => c.filteredActive.length,
+        2 => c.filteredSubmitted.length,
+        3 => c.filteredCompleted.length,
         _ => 0,
       };
 }
@@ -345,20 +348,24 @@ class _ActiveTab extends GetView<JobsController> {
 
   @override
   Widget build(BuildContext context) {
-    return _JobStatusList(
-      jobs: controller.activeJobs,
-      emptyTitle: 'No active assignments',
-      emptySubtitle: 'Accept a job to begin verification.',
-      itemBuilder: (job, i) => StatusJobTile(
-        job: job,
-        statusLabel: job.status == JobStatus.inProgress ? 'In progress' : 'Active',
-        statusColor: AppColors.accent,
-        actionLabel: 'Continue →',
-        onTap: () => Get.toNamed(AppRoutes.verification, arguments: job.id),
-      )
-          .animate()
-          .fadeIn(delay: Duration(milliseconds: 50 * i))
-          .slideY(begin: 0.04, end: 0),
+    return GetBuilder<JobsController>(
+      id: 'tabs',
+      builder: (c) => _JobStatusList(
+        jobs: c.filteredActive,
+        emptyTitle: 'No active assignments',
+        emptySubtitle: 'Accept a verification assignment to get started.',
+        itemBuilder: (job, i) => StatusJobTile(
+          job: job,
+          statusLabel:
+              job.status == JobStatus.inProgress ? 'In progress' : 'Active',
+          statusColor: AppColors.accent,
+          actionLabel: 'Continue →',
+          onTap: () => Get.toNamed(AppRoutes.verification, arguments: job.id),
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: 50 * i))
+            .slideY(begin: 0.04, end: 0),
+      ),
     );
   }
 }
@@ -368,19 +375,22 @@ class _SubmittedTab extends GetView<JobsController> {
 
   @override
   Widget build(BuildContext context) {
-    return _JobStatusList(
-      jobs: controller.submittedJobs,
-      emptyTitle: 'Nothing submitted yet',
-      emptySubtitle: 'Finished verifications will appear here.',
-      itemBuilder: (job, i) => StatusJobTile(
-        job: job,
-        statusLabel: 'Under review',
-        statusColor: AppColors.warning,
-        onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
-      )
-          .animate()
-          .fadeIn(delay: Duration(milliseconds: 50 * i))
-          .slideY(begin: 0.04, end: 0),
+    return GetBuilder<JobsController>(
+      id: 'tabs',
+      builder: (c) => _JobStatusList(
+        jobs: c.filteredSubmitted,
+        emptyTitle: 'Nothing submitted yet',
+        emptySubtitle: 'Finished verifications will appear here.',
+        itemBuilder: (job, i) => StatusJobTile(
+          job: job,
+          statusLabel: 'Under review',
+          statusColor: AppColors.warning,
+          onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: 50 * i))
+            .slideY(begin: 0.04, end: 0),
+      ),
     );
   }
 }
@@ -390,17 +400,20 @@ class _CompletedTab extends GetView<JobsController> {
 
   @override
   Widget build(BuildContext context) {
-    return _JobStatusList(
-      jobs: controller.completedJobs,
-      emptyTitle: 'No completed jobs',
-      emptySubtitle: 'Your earnings history starts here.',
-      itemBuilder: (job, i) => CompletedJobTile(
-        job: job,
-        onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
-      )
-          .animate()
-          .fadeIn(delay: Duration(milliseconds: 50 * i))
-          .slideY(begin: 0.04, end: 0),
+    return GetBuilder<JobsController>(
+      id: 'tabs',
+      builder: (c) => _JobStatusList(
+        jobs: c.filteredCompleted,
+        emptyTitle: 'No completed verifications',
+        emptySubtitle: 'Your verification history starts here.',
+        itemBuilder: (job, i) => CompletedJobTile(
+          job: job,
+          onTap: () => Get.toNamed(AppRoutes.jobDetails, arguments: job.id),
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: 50 * i))
+            .slideY(begin: 0.04, end: 0),
+      ),
     );
   }
 }
@@ -413,7 +426,7 @@ class _JobStatusList extends GetView<JobsController> {
     required this.itemBuilder,
   });
 
-  final RxList<VerificationJob> jobs;
+  final List<VerificationJob> jobs;
   final String emptyTitle;
   final String emptySubtitle;
   final Widget Function(VerificationJob job, int index) itemBuilder;

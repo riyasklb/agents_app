@@ -25,13 +25,14 @@ enum LoanType {
 }
 
 enum VerificationType {
-  residentialAddress('Residential Address Verification'),
-  businessAddress('Business Address Verification'),
-  identityVerification('Identity Verification'),
-  propertyVerification('Property Verification');
+  residentialAddress('Residential Address Verification', 'Address Verification'),
+  businessAddress('Business Address Verification', 'Business Verification'),
+  identityVerification('Identity Verification', 'Identity Verification'),
+  propertyVerification('Property Verification', 'Property Verification');
 
-  const VerificationType(this.label);
+  const VerificationType(this.label, this.shortLabel);
   final String label;
+  final String shortLabel;
 }
 
 enum MediaType {
@@ -45,4 +46,29 @@ enum NotificationType {
   verificationApproved,
   paymentAdded,
   general,
+  caseRolledBack,
+  deadlineExtended,
+}
+
+enum AllocationMode {
+  pincode,
+  distance,
+}
+
+enum PaymentStatus {
+  none,
+  pendingReview,
+  pendingPayment,
+  paid,
+}
+
+enum ExtensionReason {
+  partUnavailable('Part / document unavailable'),
+  applicantUnavailable('Applicant unavailable'),
+  accessDenied('Could not access location'),
+  weather('Weather / safety issue'),
+  other('Other valid reason');
+
+  const ExtensionReason(this.label);
+  final String label;
 }

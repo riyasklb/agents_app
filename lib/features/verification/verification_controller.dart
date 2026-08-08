@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../data/models/enums.dart';
 import '../../core/services/app_services.dart';
 import '../../data/models/models.dart';
 import '../dashboard/dashboard_controller.dart';
@@ -109,8 +110,10 @@ class VerificationController extends GetxController {
     if (!canProceed) return;
     final s = session.value;
     if (s == null || s.currentStep >= 4) return;
+    await AppServices.jobs.recordProgress(jobId);
     session.value =
         await AppServices.verification.updateStep(jobId, s.currentStep + 1);
+    job.value = await AppServices.jobs.getJobById(jobId);
   }
 
   Future<void> previousStep() async {
@@ -153,6 +156,8 @@ class VerificationController extends GetxController {
     }
 
     await captureMedia(mediaId, filePath: file.path);
+    await AppServices.jobs.recordProgress(jobId);
+    job.value = await AppServices.jobs.getJobById(jobId);
   }
 
   Future<void> captureVideo({
@@ -184,6 +189,8 @@ class VerificationController extends GetxController {
 
   Future<void> confirmGps() async {
     session.value = await AppServices.verification.confirmGps(jobId);
+    await AppServices.jobs.recordProgress(jobId);
+    job.value = await AppServices.jobs.getJobById(jobId);
     if (session.value?.gpsConfirmed == true && session.value?.otpSent != true) {
       await sendOtp();
     }
@@ -226,11 +233,25 @@ class VerificationController extends GetxController {
     session.value = await AppServices.verification.setRemarks(jobId, remarks);
   }
 
+  Future<void> requestExtension(ExtensionReason reason) async {
+    job.value = await AppServices.jobs.requestExtension(jobId, reason);
+    Get.snackbar(
+      'Deadline extended',
+      'Case deadline extended by 24 hours',
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+    );
+  }
+
   Future<void> submit() async {
     isSubmitting.value = true;
     try {
       session.value = await AppServices.verification.submitVerification(jobId);
-      await AppServices.jobs.submitJob(jobId);
+      final submitted = await AppServices.jobs.submitJob(jobId);
+      job.value = submitted;
+      await AppServices.earnings.onCaseSubmitted(submitted);
+      _scheduleBankApproval(jobId);
       if (Get.isRegistered<JobsController>()) {
         await Get.find<JobsController>().loadAll();
       }
@@ -243,6 +264,19 @@ class VerificationController extends GetxController {
     } finally {
       isSubmitting.value = false;
     }
+  }
+
+  void _scheduleBankApproval(String id) {
+    Future<void>.delayed(const Duration(seconds: 4), () async {
+      await AppServices.jobs.approveJob(id);
+      await AppServices.earnings.simulateBankApproval(id);
+      if (Get.isRegistered<JobsController>()) {
+        await Get.find<JobsController>().loadAll();
+      }
+      if (Get.isRegistered<EarningsController>()) {
+        await Get.find<EarningsController>().loadData();
+      }
+    });
   }
 
   String maskedApplicantPhone() {

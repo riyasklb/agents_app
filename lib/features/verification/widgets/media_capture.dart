@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/common_widgets.dart';
+import '../../../data/models/models.dart';
 import '../verification_controller.dart';
 import 'media_preview.dart';
 
@@ -19,6 +20,7 @@ class VerificationPhotoTile extends GetView<VerificationController> {
     required this.icon,
     required this.isCaptured,
     this.previewPath,
+    this.geoStamp,
   });
 
   final String mediaId;
@@ -26,6 +28,7 @@ class VerificationPhotoTile extends GetView<VerificationController> {
   final IconData icon;
   final bool isCaptured;
   final String? previewPath;
+  final GeoStamp? geoStamp;
 
   bool get _hasPreview =>
       previewPath != null &&
@@ -89,7 +92,16 @@ class VerificationPhotoTile extends GetView<VerificationController> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    if (isCaptured)
+                    if (isCaptured && geoStamp != null)
+                      Text(
+                        'Geo-stamped · ${geoStamp!.latitude.toStringAsFixed(4)}, ${geoStamp!.longitude.toStringAsFixed(4)}',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
+                    else if (isCaptured)
                       Text(
                         'Tap to retake · Preview available',
                         style: TextStyle(

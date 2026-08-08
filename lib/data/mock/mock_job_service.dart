@@ -1,3 +1,4 @@
+import '../mock/mock_assignment_service.dart';
 import '../mock/mock_data.dart';
 import '../models/enums.dart';
 import '../models/models.dart';
@@ -5,8 +6,19 @@ import '../models/models.dart';
 class MockJobService {
   final List<VerificationJob> _jobs =
       List<VerificationJob>.from(MockData.jobs);
+  final _assignment = MockAssignmentService();
+
+  List<VerificationJob> get jobs => _jobs;
+
+  Future<void> checkRollbacks() async {
+    final rolled = _assignment.rollbackExpiredCases(_jobs);
+    if (rolled.isNotEmpty) {
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+  }
 
   Future<List<VerificationJob>> getJobs({bool simulateDelay = true}) async {
+    await checkRollbacks();
     if (simulateDelay) {
       await Future.delayed(const Duration(milliseconds: 800));
     }
@@ -14,6 +26,7 @@ class MockJobService {
   }
 
   Future<VerificationJob?> getJobById(String id) async {
+    await checkRollbacks();
     await Future.delayed(const Duration(milliseconds: 400));
     try {
       return _jobs.firstWhere((j) => j.id == id);
@@ -23,6 +36,7 @@ class MockJobService {
   }
 
   Future<List<VerificationJob>> getAvailableJobs() async {
+    await checkRollbacks();
     await Future.delayed(const Duration(milliseconds: 600));
     return _jobs.where((j) => j.status == JobStatus.available).toList();
   }
@@ -33,6 +47,7 @@ class MockJobService {
   }
 
   Future<List<VerificationJob>> getActiveJobs() async {
+    await checkRollbacks();
     await Future.delayed(const Duration(milliseconds: 500));
     return _jobs
         .where((j) =>
@@ -55,12 +70,32 @@ class MockJobService {
         .toList();
   }
 
-  Future<VerificationJob> acceptJob(String jobId) async {
+  Future<List<VerificationJob>> getAcceptedCasesForAgent(String agentId) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    return _jobs
+        .where((j) =>
+            j.assignedAgentId == agentId &&
+            (j.status == JobStatus.accepted ||
+                j.status == JobStatus.inProgress ||
+                j.status == JobStatus.submitted))
+        .toList();
+  }
+
+  /// First-accept wins. Throws if case already taken.
+  Future<VerificationJob> acceptJob(String jobId, {String? agentId}) async {
     await Future.delayed(const Duration(milliseconds: 800));
     final index = _jobs.indexWhere((j) => j.id == jobId);
     if (index == -1) throw Exception('Job not found');
-    _jobs[index] = _jobs[index].copyWith(status: JobStatus.accepted);
-    return _jobs[index];
+
+    final accepted = _assignment.tryAccept(
+      jobs: _jobs,
+      index: index,
+      agentId: agentId ?? MockData.agent.id,
+    );
+    if (accepted == null) {
+      throw Exception('Case already accepted by another agent');
+    }
+    return accepted;
   }
 
   Future<VerificationJob> rejectJob(String jobId) async {
@@ -71,6 +106,25 @@ class MockJobService {
     return _jobs[index];
   }
 
+  Future<VerificationJob> recordProgress(String jobId) async {
+    _assignment.recordProgress(jobs: _jobs, jobId: jobId);
+    return _jobs.firstWhere((j) => j.id == jobId);
+  }
+
+  Future<VerificationJob> requestExtension(
+    String jobId,
+    ExtensionReason reason,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    final updated = _assignment.requestExtension(
+      jobs: _jobs,
+      jobId: jobId,
+      reason: reason,
+    );
+    if (updated == null) throw Exception('Unable to extend deadline');
+    return updated;
+  }
+
   Future<VerificationJob> submitJob(String jobId) async {
     await Future.delayed(const Duration(milliseconds: 1000));
     final index = _jobs.indexWhere((j) => j.id == jobId);
@@ -78,6 +132,19 @@ class MockJobService {
     _jobs[index] = _jobs[index].copyWith(
       status: JobStatus.submitted,
       completedAt: DateTime.now(),
+      paymentStatus: PaymentStatus.pendingReview,
+      progressDeadline: null,
+    );
+    return _jobs[index];
+  }
+
+  Future<VerificationJob> approveJob(String jobId) async {
+    await Future.delayed(const Duration(milliseconds: 800));
+    final index = _jobs.indexWhere((j) => j.id == jobId);
+    if (index == -1) throw Exception('Job not found');
+    _jobs[index] = _jobs[index].copyWith(
+      status: JobStatus.approved,
+      paymentStatus: PaymentStatus.paid,
     );
     return _jobs[index];
   }
@@ -92,8 +159,10 @@ class MockJobService {
     final lower = query.toLowerCase();
     return _jobs.where((j) {
       return j.applicant.name.toLowerCase().contains(lower) ||
-          j.loanType.label.toLowerCase().contains(lower) ||
-          j.location.toLowerCase().contains(lower);
+          j.verificationType.label.toLowerCase().contains(lower) ||
+          j.applicationId.toLowerCase().contains(lower) ||
+          j.location.toLowerCase().contains(lower) ||
+          j.pincode.contains(lower);
     }).toList();
   }
 
@@ -105,10 +174,6 @@ class MockJobService {
       return List.from(jobs)
         ..sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
     }
-    if (filter == 'Highest Pay') {
-      return List.from(jobs)
-        ..sort((a, b) => b.commission.compareTo(a.commission));
-    }
     if (filter == 'Due Today') {
       final today = DateTime.now();
       return jobs.where((j) {
@@ -117,14 +182,29 @@ class MockJobService {
             j.deadline.day == today.day;
       }).toList();
     }
-    if (filter == 'Home Loan') {
-      return jobs.where((j) => j.loanType == LoanType.homeLoan).toList();
-    }
-    if (filter == 'Personal Loan') {
-      return jobs.where((j) => j.loanType == LoanType.personalLoan).toList();
+    if (filter == 'Address') {
+      return jobs
+          .where((j) => j.verificationType == VerificationType.residentialAddress)
+          .toList();
     }
     if (filter == 'Business') {
-      return jobs.where((j) => j.loanType == LoanType.businessLoan).toList();
+      return jobs
+          .where((j) => j.verificationType == VerificationType.businessAddress)
+          .toList();
+    }
+    if (filter == 'Property') {
+      return jobs
+          .where(
+            (j) => j.verificationType == VerificationType.propertyVerification,
+          )
+          .toList();
+    }
+    if (filter == 'Identity') {
+      return jobs
+          .where(
+            (j) => j.verificationType == VerificationType.identityVerification,
+          )
+          .toList();
     }
     return jobs;
   }

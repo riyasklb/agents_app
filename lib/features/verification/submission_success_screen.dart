@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/app_services.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../shell/main_controller.dart';
@@ -52,7 +51,7 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
             if (job == null) {
               return const EmptyState(
                 icon: Icons.error_outline,
-                title: 'Job not found',
+                title: 'Verification not found',
                 subtitle: 'Unable to load details.',
               );
             }
@@ -80,7 +79,7 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
                   ).animate().fadeIn(delay: 200.ms),
                   SizedBox(height: 8.h),
                   Text(
-                    'Your verification is under bank review',
+                    'Your report is under bank review. Payment will be credited after acceptance.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,
@@ -112,7 +111,7 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
                                     ),
                                   ),
                                   Text(
-                                    job.loanType.label,
+                                    job.verificationType.label,
                                     style: TextStyle(
                                       fontSize: 12.sp,
                                       color: AppColors.textSecondary,
@@ -127,27 +126,36 @@ class _SubmissionSuccessScreenState extends State<SubmissionSuccessScreen> {
                         Divider(color: AppColors.border.withValues(alpha: 0.6)),
                         SizedBox(height: 16.h),
                         _SummaryRow(
-                          label: 'Application ID',
+                          label: 'Verification ID',
                           value: job.applicationId,
                         ),
                         SizedBox(height: 12.h),
                         _SummaryRow(
-                          label: 'Commission',
-                          value: Formatters.currency(job.commission),
-                          valueColor: AppColors.success,
+                          label: 'Location',
+                          value: job.location,
+                        ),
+                        const _SummaryRow(
+                          label: 'Payment status',
+                          value: 'Pending review',
+                          valueColor: AppColors.warning,
+                        ),
+                        SizedBox(height: 12.h),
+                        const _SummaryRow(
+                          label: 'Next step',
+                          value: 'Bank acceptance',
                         ),
                         SizedBox(height: 12.h),
                         const _SummaryRow(
                           label: 'Status',
-                          value: 'Under review',
-                          valueColor: AppColors.warning,
+                          value: 'Submitted',
+                          valueColor: AppColors.accent,
                         ),
                       ],
                     ),
                   ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.06, end: 0),
                   const Spacer(),
                   PrimaryButton(
-                    label: 'Back to jobs',
+                    label: 'Back to verifications',
                     icon: Icons.work_outline_rounded,
                     onPressed: () {
                       Get.offAllNamed(AppRoutes.main);

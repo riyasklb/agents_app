@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../core/controllers/allocation_controller.dart';
 import '../../core/services/app_services.dart';
 import '../../data/models/models.dart';
 
@@ -7,6 +8,8 @@ class DashboardController extends GetxController {
   final isLoading = true.obs;
   final stats = Rxn<DashboardStats>();
   final nearbyJobs = <VerificationJob>[].obs;
+
+  List<VerificationJob> _allAvailable = [];
 
   @override
   void onInit() {
@@ -22,12 +25,16 @@ class DashboardController extends GetxController {
         AppServices.jobs.getAvailableJobs(),
       ]);
       stats.value = results[0] as DashboardStats;
-      nearbyJobs.assignAll(
-        (results[1] as List<VerificationJob>).take(2).toList(),
-      );
+      _allAvailable = results[1] as List<VerificationJob>;
+      applyLocationFilter();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void applyLocationFilter() {
+    final allocation = Get.find<AllocationController>();
+    nearbyJobs.assignAll(allocation.filterJobs(_allAvailable).take(2).toList());
   }
 
   Future<void> refresh() => loadData();

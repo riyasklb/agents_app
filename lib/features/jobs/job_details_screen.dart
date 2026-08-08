@@ -172,7 +172,7 @@ class _Content extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CommissionHero(job: job)
+          _VerificationHero(job: job)
               .animate()
               .fadeIn(duration: 400.ms)
               .slideY(begin: 0.06, end: 0),
@@ -205,8 +205,8 @@ class _Content extends StatelessWidget {
   }
 }
 
-class _CommissionHero extends StatelessWidget {
-  const _CommissionHero({required this.job});
+class _VerificationHero extends StatelessWidget {
+  const _VerificationHero({required this.job});
 
   final VerificationJob job;
 
@@ -222,11 +222,12 @@ class _CommissionHero extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  job.loanType.label,
+                  job.verificationType.label,
                   style: TextStyle(
-                    fontSize: 13.sp,
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontWeight: FontWeight.w500,
+                    fontSize: 16.sp,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
                   ),
                 ),
               ),
@@ -250,21 +251,11 @@ class _CommissionHero extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            Formatters.currency(job.commission),
-            style: TextStyle(
-              fontSize: 36.sp,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -1.2,
-              height: 1.05,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'Your commission',
+            job.applicationId,
             style: TextStyle(
               fontSize: 12.sp,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withValues(alpha: 0.75),
+              fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 16.h),
@@ -401,7 +392,7 @@ class _InfoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('Application ID', job.applicationId),
+      ('Verification ID', job.applicationId),
       ('Phone', job.applicant.phone),
       ('Address', job.applicant.address),
       ('Status', job.status.name.toUpperCase()),

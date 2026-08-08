@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import 'auth_controller.dart';
@@ -39,7 +40,7 @@ class LoginScreen extends GetView<AuthController> {
                 ).animate().fadeIn(delay: 150.ms).slideX(begin: -0.05, end: 0),
                 SizedBox(height: 8.h),
                 Text(
-                  'Sign in to manage your verification assignments.',
+                  'Sign in with your mobile number and OTP.',
                   style: TextStyle(
                     fontSize: 15.sp,
                     color: AppColors.textSecondary,
@@ -52,24 +53,15 @@ class LoginScreen extends GetView<AuthController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Mobile Number',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      _fieldLabel('Mobile Number'),
                       SizedBox(height: 8.h),
                       TextField(
                         controller: controller.phoneController,
                         keyboardType: TextInputType.phone,
                         style: TextStyle(fontSize: 16.sp),
-                        decoration: InputDecoration(
-                          hintText: 'Enter mobile number',
-                          prefixIcon: const Icon(Icons.phone_android_rounded),
-                          filled: true,
-                          fillColor: AppColors.surface,
+                        decoration: _inputDecoration(
+                          hint: 'Enter mobile number',
+                          icon: Icons.phone_android_rounded,
                         ),
                       ),
                       Obx(() {
@@ -80,27 +72,17 @@ class LoginScreen extends GetView<AuthController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(height: 20.h),
-                            Text(
-                              'OTP',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
+                            _fieldLabel('OTP'),
                             SizedBox(height: 8.h),
                             TextField(
                               controller: controller.otpController,
                               keyboardType: TextInputType.number,
                               maxLength: 6,
                               style: TextStyle(fontSize: 16.sp),
-                              decoration: InputDecoration(
-                                hintText: 'Enter OTP (demo: 1234)',
-                                prefixIcon:
-                                    const Icon(Icons.lock_outline_rounded),
+                              decoration: _inputDecoration(
+                                hint: 'Enter OTP (demo: 1234)',
+                                icon: Icons.lock_outline_rounded,
                                 counterText: '',
-                                filled: true,
-                                fillColor: AppColors.surface,
                               ),
                             ),
                           ],
@@ -112,41 +94,54 @@ class LoginScreen extends GetView<AuthController> {
                 SizedBox(height: 28.h),
                 Obx(
                   () => PrimaryButton(
-                    label: 'Continue',
+                    label: controller.showOtp.value ? 'Sign in' : 'Continue',
                     isLoading: controller.isLoading.value,
                     onPressed: controller.continueLogin,
                   ),
                 ).animate().fadeIn(delay: 450.ms),
+                SizedBox(height: 16.h),
+                // Center(
+                //   child: TextButton(
+                //     onPressed: () => Get.toNamed(AppRoutes.signup),
+                //     child: Text(
+                //       'New agent? Create account',
+                //       style: TextStyle(
+                //         fontSize: 14.sp,
+                //         fontWeight: FontWeight.w600,
+                //         color: AppColors.accent,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 SizedBox(height: 24.h),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.verified_user_outlined,
-                        size: 16.sp,
-                        color: AppColors.textTertiary,
-                      ),
-                      SizedBox(width: 6.w),
-                      Flexible(
-                        child: Text(
-                          'Secure access for verified field agents',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.textTertiary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 40.h),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _fieldLabel(String text) => Text(
+        text,
+        style: TextStyle(
+          fontSize: 13.sp,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+      );
+
+  InputDecoration _inputDecoration({
+    required String hint,
+    required IconData icon,
+    String counterText = '',
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon),
+      counterText: counterText,
+      filled: true,
+      fillColor: AppColors.surface,
     );
   }
 }

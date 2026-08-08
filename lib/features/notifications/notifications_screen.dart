@@ -126,6 +126,8 @@ class _Card extends StatelessWidget {
         NotificationType.newJob => Icons.work_outline_rounded,
         NotificationType.verificationApproved => Icons.verified_rounded,
         NotificationType.paymentAdded => Icons.payments_outlined,
+        NotificationType.caseRolledBack => Icons.replay_rounded,
+        NotificationType.deadlineExtended => Icons.more_time_rounded,
         NotificationType.general => Icons.notifications_outlined,
       };
 
@@ -133,6 +135,8 @@ class _Card extends StatelessWidget {
         NotificationType.newJob => AppColors.accent,
         NotificationType.verificationApproved => AppColors.success,
         NotificationType.paymentAdded => AppColors.warning,
+        NotificationType.caseRolledBack => AppColors.error,
+        NotificationType.deadlineExtended => AppColors.accent,
         NotificationType.general => AppColors.textSecondary,
       };
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/controllers/allocation_controller.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/app_services.dart';
 import '../../core/theme/app_colors.dart';
@@ -22,11 +23,11 @@ class JobsController extends GetxController
 
   final filters = [
     'Nearby',
-    'Highest Pay',
     'Due Today',
-    'Home Loan',
-    'Personal Loan',
+    'Address',
     'Business',
+    'Property',
+    'Identity',
   ];
 
   static const tabLabels = ['Available', 'Active', 'Submitted', 'Done'];
@@ -78,6 +79,7 @@ class JobsController extends GetxController
           .where((j) => j.status == JobStatus.available)
           .toList();
     }
+    jobs = Get.find<AllocationController>().filterJobs(jobs);
     if (selectedFilter.value != null) {
       jobs = AppServices.jobs.filterJobs(
         jobs: jobs,
@@ -86,6 +88,17 @@ class JobsController extends GetxController
     }
     return jobs;
   }
+
+  List<VerificationJob> get filteredActive =>
+      Get.find<AllocationController>().filterJobs(activeJobs);
+
+  List<VerificationJob> get filteredSubmitted =>
+      Get.find<AllocationController>().filterJobs(submittedJobs);
+
+  List<VerificationJob> get filteredCompleted =>
+      Get.find<AllocationController>().filterJobs(completedJobs);
+
+  void applyLocationFilter() => update(['available', 'tabs']);
 
   bool isProcessing(String jobId) => processingJobIds.contains(jobId);
 
@@ -113,6 +126,15 @@ class JobsController extends GetxController
       await AppServices.jobs.acceptJob(id);
       await loadAll();
       Get.toNamed(AppRoutes.jobAccepted, arguments: id);
+    } catch (e) {
+      Get.snackbar(
+        'Case unavailable',
+        e.toString().replaceFirst('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+      await loadAll();
     } finally {
       processingJobIds.remove(id);
     }

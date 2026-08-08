@@ -89,7 +89,7 @@ class _VerificationFlowScreenState extends State<VerificationFlowScreen> {
     VerificationSession session,
   ) {
     return switch (step) {
-      0 => _OverviewStep(job: job),
+      0 => _OverviewStep(job: job, controller: controller),
       1 => _ArriveStep(job: job, session: session),
       2 => _PhotosStep(session: session),
       3 => _VerifyStep(session: session, remarks: _remarksController),
@@ -229,15 +229,37 @@ class _BottomBar extends GetView<VerificationController> {
 // ─── Step 0: Overview ────────────────────────────────────────────────────────
 
 class _OverviewStep extends StatelessWidget {
-  const _OverviewStep({required this.job});
+  const _OverviewStep({required this.job, required this.controller});
 
   final VerificationJob job;
+  final VerificationController controller;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (job.progressDeadline != null)
+          AppCard(
+            padding: EdgeInsets.all(14.w),
+            child: Row(
+              children: [
+                Icon(Icons.timer_outlined,
+                    color: AppColors.warning, size: 20.sp),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    'Update within ${_remaining(job.progressDeadline!)} or case returns to queue',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (job.progressDeadline != null) SizedBox(height: 12.h),
         GlassCard(
           padding: EdgeInsets.all(18.w),
           child: Row(
@@ -262,7 +284,7 @@ class _OverviewStep extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${job.loanType.label} · ${job.applicationId}',
+                      '${job.verificationType.label} · ${job.applicationId}',
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: AppColors.textSecondary,
@@ -281,10 +303,9 @@ class _OverviewStep extends StatelessWidget {
           value: job.location,
         ),
         _InfoTile(
-          icon: Icons.payments_outlined,
-          label: 'Commission',
-          value: Formatters.currency(job.commission),
-          valueColor: AppColors.primary,
+          icon: Icons.timer_outlined,
+          label: 'Estimated time',
+          value: '${job.estimatedMinutes} minutes',
         ),
         _InfoTile(
           icon: Icons.schedule_outlined,
@@ -313,7 +334,73 @@ class _OverviewStep extends StatelessWidget {
           number: '3',
           text: 'Record video, answer questions & submit',
         ),
+        SizedBox(height: 16.h),
+        SecondaryButton(
+          label: 'Request deadline extension',
+          icon: Icons.more_time_rounded,
+          onPressed: () => _showExtensionSheet(context, controller),
+        ),
       ],
+    );
+  }
+
+  String _remaining(DateTime deadline) {
+    final diff = deadline.difference(DateTime.now());
+    if (diff.isNegative) return '0m';
+    if (diff.inHours > 0) return '${diff.inHours}h ${diff.inMinutes % 60}m';
+    return '${diff.inMinutes}m';
+  }
+
+  void _showExtensionSheet(
+    BuildContext context,
+    VerificationController controller,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Request 24-hour extension',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Select a valid reason. Deadline will be extended automatically.',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                ...ExtensionReason.values.map(
+                  (reason) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(reason.label),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.pop(context);
+                      controller.requestExtension(reason);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -591,6 +678,7 @@ class _PhotosStep extends GetView<VerificationController> {
               icon: item.$3,
               isCaptured: media.isCaptured,
               previewPath: media.thumbnailPath,
+              geoStamp: media.geoStamp,
             ),
           );
         }),
@@ -843,24 +931,36 @@ class _SubmitStep extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
         AppCard(
-          gradient: AppColors.earningsGradient,
           padding: EdgeInsets.all(18.w),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'You\'ll earn',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
+              Icon(
+                Icons.verified_user_outlined,
+                size: 22.sp,
+                color: AppColors.accent,
               ),
-              Text(
-                Formatters.currency(job.commission),
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      job.verificationType.label,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      job.applicationId,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

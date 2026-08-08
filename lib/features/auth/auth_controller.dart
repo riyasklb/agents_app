@@ -22,13 +22,7 @@ class AuthController extends GetxController {
   Future<void> continueLogin() async {
     if (!showOtp.value) {
       if (phoneController.text.length < 10) {
-        Get.snackbar(
-          'Invalid number',
-          'Please enter a valid mobile number',
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 12,
-        );
+        _snack('Please enter a valid mobile number');
         return;
       }
       showOtp.value = true;
@@ -46,13 +40,7 @@ class AuthController extends GetxController {
       isAuthenticated.value = true;
       Get.offAllNamed(AppRoutes.main);
     } else {
-      Get.snackbar(
-        'Invalid OTP',
-        'Try 1234 for demo',
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-      );
+      _snack('Invalid OTP. Demo OTP: 1234');
     }
   }
 
@@ -60,5 +48,15 @@ class AuthController extends GetxController {
     await AppServices.auth.logout();
     isAuthenticated.value = false;
     Get.offAllNamed(AppRoutes.login);
+  }
+
+  void _snack(String message) {
+    Get.snackbar(
+      'Sign in',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+    );
   }
 }

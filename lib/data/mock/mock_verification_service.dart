@@ -46,6 +46,7 @@ class MockVerificationService {
     String mediaId, {
     int? durationSeconds,
     String? filePath,
+    GeoStamp? geoStamp,
   }) async {
     await Future.delayed(const Duration(milliseconds: 600));
     final session = _sessions[jobId];
@@ -56,6 +57,7 @@ class MockVerificationService {
           isCaptured: true,
           thumbnailPath: filePath ?? 'captured_$mediaId',
           durationSeconds: durationSeconds,
+          geoStamp: geoStamp ?? _mockGeoStamp(),
         );
       }
       return m;
@@ -64,6 +66,13 @@ class MockVerificationService {
     _sessions[jobId] = updated;
     return updated;
   }
+
+  GeoStamp _mockGeoStamp() => GeoStamp(
+        latitude: 10.5276,
+        longitude: 76.2144,
+        capturedAt: DateTime.now(),
+        address: 'Thrissur, Kerala',
+      );
 
   Future<VerificationSession> confirmGps(String jobId) async {
     await Future.delayed(const Duration(milliseconds: 800));

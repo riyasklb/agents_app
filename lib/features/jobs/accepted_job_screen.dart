@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/app_services.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import 'widgets/job_card.dart';
@@ -181,8 +180,8 @@ class _JobSummaryCard extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  '${job.loanType.label} · ${job.location}',
-                  maxLines: 1,
+                  '${job.verificationType.label} · ${job.location}',
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12.sp,
@@ -190,25 +189,12 @@ class _JobSummaryCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    Text(
-                      Formatters.currency(job.commission),
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '· ${jobDeadlineLabel(job.deadline)}',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${job.applicationId} · ${jobDeadlineLabel(job.deadline)}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -226,7 +212,7 @@ class _NextSteps extends StatelessWidget {
       ('Arrive at location', Icons.location_on_outlined),
       ('Verify OTP with applicant', Icons.sms_outlined),
       ('Complete on-site verification', Icons.verified_user_outlined),
-      ('Submit and earn commission', Icons.payments_outlined),
+      ('Submit verification report', Icons.assignment_turned_in_outlined),
     ];
 
     return Container(

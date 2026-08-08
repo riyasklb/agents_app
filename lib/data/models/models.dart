@@ -1,5 +1,57 @@
 import 'enums.dart';
 
+class GeoStamp {
+  const GeoStamp({
+    required this.latitude,
+    required this.longitude,
+    required this.capturedAt,
+    required this.address,
+  });
+
+  final double latitude;
+  final double longitude;
+  final DateTime capturedAt;
+  final String address;
+}
+
+class AgentAllocationPreferences {
+  const AgentAllocationPreferences({
+    required this.mode,
+    required this.pincodes,
+    required this.distanceRadiusKm,
+  });
+
+  final AllocationMode mode;
+  final List<String> pincodes;
+  final double distanceRadiusKm;
+
+  AgentAllocationPreferences copyWith({
+    AllocationMode? mode,
+    List<String>? pincodes,
+    double? distanceRadiusKm,
+  }) {
+    return AgentAllocationPreferences(
+      mode: mode ?? this.mode,
+      pincodes: pincodes ?? this.pincodes,
+      distanceRadiusKm: distanceRadiusKm ?? this.distanceRadiusKm,
+    );
+  }
+}
+
+class DeadlineExtension {
+  const DeadlineExtension({
+    required this.reason,
+    required this.extendedAt,
+    required this.previousDeadline,
+    required this.newDeadline,
+  });
+
+  final ExtensionReason reason;
+  final DateTime extendedAt;
+  final DateTime previousDeadline;
+  final DateTime newDeadline;
+}
+
 class Agent {
   const Agent({
     required this.id,
@@ -16,6 +68,13 @@ class Agent {
     required this.isVerified,
     required this.kycStatus,
     required this.serviceAreas,
+    required this.address,
+    required this.aadhaarMasked,
+    required this.aadhaarVerified,
+    required this.certification,
+    required this.certificationVerified,
+    required this.upiId,
+    required this.allocationPreferences,
   });
 
   final String id;
@@ -32,6 +91,48 @@ class Agent {
   final bool isVerified;
   final AgentKycStatus kycStatus;
   final List<String> serviceAreas;
+  final String address;
+  final String aadhaarMasked;
+  final bool aadhaarVerified;
+  final String certification;
+  final bool certificationVerified;
+  final String upiId;
+  final AgentAllocationPreferences allocationPreferences;
+
+  Agent copyWith({
+    String? name,
+    String? phone,
+    String? email,
+    String? address,
+    String? upiId,
+    String? certification,
+    AgentAllocationPreferences? allocationPreferences,
+  }) {
+    return Agent(
+      id: id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      avatarInitials: avatarInitials,
+      avatarUrl: avatarUrl,
+      rating: rating,
+      totalJobs: totalJobs,
+      successRate: successRate,
+      totalEarned: totalEarned,
+      location: location,
+      isVerified: isVerified,
+      kycStatus: kycStatus,
+      serviceAreas: serviceAreas,
+      address: address ?? this.address,
+      aadhaarMasked: aadhaarMasked,
+      aadhaarVerified: aadhaarVerified,
+      certification: certification ?? this.certification,
+      certificationVerified: certificationVerified,
+      upiId: upiId ?? this.upiId,
+      allocationPreferences:
+          allocationPreferences ?? this.allocationPreferences,
+    );
+  }
 }
 
 class AgentKycStatus {
@@ -74,6 +175,7 @@ class VerificationJob {
     required this.verificationType,
     required this.applicant,
     required this.location,
+    required this.pincode,
     required this.distanceKm,
     required this.commission,
     required this.deadline,
@@ -83,6 +185,12 @@ class VerificationJob {
     required this.requirements,
     this.completedAt,
     this.remarks,
+    this.assignedAgentId,
+    this.acceptedAt,
+    this.lastProgressAt,
+    this.progressDeadline,
+    this.paymentStatus = PaymentStatus.none,
+    this.deadlineExtensions = const [],
   });
 
   final String id;
@@ -91,6 +199,7 @@ class VerificationJob {
   final VerificationType verificationType;
   final Applicant applicant;
   final String location;
+  final String pincode;
   final double distanceKm;
   final double commission;
   final DateTime deadline;
@@ -100,6 +209,12 @@ class VerificationJob {
   final List<String> requirements;
   final DateTime? completedAt;
   final String? remarks;
+  final String? assignedAgentId;
+  final DateTime? acceptedAt;
+  final DateTime? lastProgressAt;
+  final DateTime? progressDeadline;
+  final PaymentStatus paymentStatus;
+  final List<DeadlineExtension> deadlineExtensions;
 
   VerificationJob copyWith({
     String? id,
@@ -108,6 +223,7 @@ class VerificationJob {
     VerificationType? verificationType,
     Applicant? applicant,
     String? location,
+    String? pincode,
     double? distanceKm,
     double? commission,
     DateTime? deadline,
@@ -117,6 +233,12 @@ class VerificationJob {
     List<String>? requirements,
     DateTime? completedAt,
     String? remarks,
+    String? assignedAgentId,
+    DateTime? acceptedAt,
+    DateTime? lastProgressAt,
+    DateTime? progressDeadline,
+    PaymentStatus? paymentStatus,
+    List<DeadlineExtension>? deadlineExtensions,
   }) {
     return VerificationJob(
       id: id ?? this.id,
@@ -125,6 +247,7 @@ class VerificationJob {
       verificationType: verificationType ?? this.verificationType,
       applicant: applicant ?? this.applicant,
       location: location ?? this.location,
+      pincode: pincode ?? this.pincode,
       distanceKm: distanceKm ?? this.distanceKm,
       commission: commission ?? this.commission,
       deadline: deadline ?? this.deadline,
@@ -134,6 +257,12 @@ class VerificationJob {
       requirements: requirements ?? this.requirements,
       completedAt: completedAt ?? this.completedAt,
       remarks: remarks ?? this.remarks,
+      assignedAgentId: assignedAgentId ?? this.assignedAgentId,
+      acceptedAt: acceptedAt ?? this.acceptedAt,
+      lastProgressAt: lastProgressAt ?? this.lastProgressAt,
+      progressDeadline: progressDeadline ?? this.progressDeadline,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      deadlineExtensions: deadlineExtensions ?? this.deadlineExtensions,
     );
   }
 }
@@ -146,6 +275,7 @@ class VerificationMedia {
     required this.isCaptured,
     this.thumbnailPath,
     this.durationSeconds,
+    this.geoStamp,
   });
 
   final String id;
@@ -154,6 +284,7 @@ class VerificationMedia {
   final bool isCaptured;
   final String? thumbnailPath;
   final int? durationSeconds;
+  final GeoStamp? geoStamp;
 
   VerificationMedia copyWith({
     String? id,
@@ -162,6 +293,7 @@ class VerificationMedia {
     bool? isCaptured,
     String? thumbnailPath,
     int? durationSeconds,
+    GeoStamp? geoStamp,
   }) {
     return VerificationMedia(
       id: id ?? this.id,
@@ -170,6 +302,7 @@ class VerificationMedia {
       isCaptured: isCaptured ?? this.isCaptured,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       durationSeconds: durationSeconds ?? this.durationSeconds,
+      geoStamp: geoStamp ?? this.geoStamp,
     );
   }
 }

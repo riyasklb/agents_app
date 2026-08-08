@@ -24,11 +24,11 @@ void main() {
       scrollable: true,
     );
 
-    expect(find.textContaining('Verification'), findsWidgets);
+    expect(find.text('Address Verification'), findsOneWidget);
     expect(find.text(job.applicant.name), findsOneWidget);
   });
 
-  testWidgets('JobCard compact mode renders commission row', (tester) async {
+  testWidgets('JobCard compact mode renders verification type', (tester) async {
     final job = MockData.jobs.first;
 
     await pumpTestApp(
@@ -37,6 +37,6 @@ void main() {
       scrollable: true,
     );
 
-    expect(find.textContaining('₹'), findsWidgets);
+    expect(find.text('Address Verification'), findsOneWidget);
   });
 }

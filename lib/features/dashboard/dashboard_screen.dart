@@ -12,6 +12,7 @@ import '../../core/utils/formatters.dart';
 import '../../core/widgets/charts.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../core/widgets/location_picker.dart';
 import '../jobs/widgets/job_card.dart';
 import '../shell/main_controller.dart';
 import 'dashboard_controller.dart';
@@ -51,7 +52,7 @@ class DashboardScreen extends GetView<DashboardController> {
                             .slideY(begin: 0.06, end: 0),
                       SizedBox(height: 28.h),
                       SectionHeader(
-                        title: 'Nearby',
+                        title: 'Nearby verifications',
                         actionLabel: 'See all',
                         onAction: () =>
                             Get.find<MainController>().changeTab(1),
@@ -65,9 +66,9 @@ class DashboardScreen extends GetView<DashboardController> {
                 SliverFillRemaining(
                   child: EmptyState(
                     icon: Icons.search_off_rounded,
-                    title: 'No jobs nearby',
+                    title: 'No verifications nearby',
                     subtitle:
-                        'Check back later for new verification assignments.',
+                        'Try another service location or check back later.',
                   ),
                 )
               else
@@ -150,28 +151,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 10.h),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on_rounded,
-                    size: 15.sp,
-                    color: AppColors.textTertiary,
-                  ),
-                  SizedBox(width: 4.w),
-                  Flexible(
-                    child: Text(
-                      AppConstants.agentLocation,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const LocationPickerChip(),
             ],
           ),
         ),

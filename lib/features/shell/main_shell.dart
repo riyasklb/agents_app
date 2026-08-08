@@ -98,7 +98,7 @@ class _FloatingBottomNav extends StatelessWidget {
     Icons.person_rounded,
   ];
 
-  static const _labels = ['Home', 'Jobs', 'Earnings', 'Profile'];
+  static const _labels = ['Home', 'Verifications', 'Earnings', 'Profile'];
 
   @override
   Widget build(BuildContext context) {

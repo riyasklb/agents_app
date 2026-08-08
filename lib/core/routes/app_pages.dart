@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
 
+import '../../core/controllers/allocation_controller.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/signup_controller.dart';
+import '../../features/auth/signup_screen.dart';
 import '../../features/dashboard/dashboard_controller.dart';
 import '../../features/earnings/earnings_controller.dart';
 import '../../features/jobs/accepted_job_screen.dart';
@@ -9,7 +12,12 @@ import '../../features/jobs/job_details_screen.dart';
 import '../../features/jobs/jobs_controller.dart';
 import '../../features/notifications/notifications_controller.dart';
 import '../../features/notifications/notifications_screen.dart';
+import '../../features/profile/accepted_cases_screen.dart';
+import '../../features/profile/allocation_preferences_screen.dart';
+import '../../features/profile/payment_history_screen.dart';
+import '../../features/profile/personal_details_screen.dart';
 import '../../features/profile/profile_controller.dart';
+import '../../features/profile/profile_details_controller.dart';
 import '../../features/shell/main_controller.dart';
 import '../../features/shell/main_shell.dart';
 import '../../features/verification/submission_success_screen.dart';
@@ -33,9 +41,27 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 400),
     ),
     GetPage(
+      name: AppRoutes.signup,
+      page: () => const SignupScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(SignupController.new);
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.allocationPreferences,
+      page: () => const AllocationPreferencesScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(AllocationController.new, fenix: true);
+        Get.lazyPut(AllocationPreferencesController.new);
+      }),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: AppRoutes.main,
       page: () => const MainShell(),
       binding: BindingsBuilder(() {
+        Get.lazyPut(AllocationController.new, fenix: true);
         Get.lazyPut(MainController.new);
         Get.lazyPut(AuthController.new, fenix: true);
         Get.lazyPut(DashboardController.new);
@@ -44,6 +70,27 @@ class AppPages {
         Get.lazyPut(ProfileController.new);
       }),
       transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: AppRoutes.acceptedCases,
+      page: () => const AcceptedCasesScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(AcceptedCasesController.new);
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.personalDetails,
+      page: () => const PersonalDetailsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(ProfileDetailsController.new);
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.paymentHistory,
+      page: () => const PaymentHistoryScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(PaymentHistoryController.new);
+      }),
     ),
     GetPage(
       name: AppRoutes.jobDetails,

@@ -3,9 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../core/constants/layout_constants.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../data/mock/mock_data.dart';
 import '../auth/auth_controller.dart';
 import 'profile_controller.dart';
 
@@ -65,7 +67,7 @@ class ProfileScreen extends GetView<ProfileController> {
                     SizedBox(height: 20.h),
                     Row(
                       children: [
-                        _Stat('${agent.totalJobs}', 'Jobs'),
+                        _Stat('${agent.totalJobs}', 'Verifications'),
                         _divider(),
                         _Stat('${agent.successRate.toInt()}%', 'Success'),
                         _divider(),
@@ -79,20 +81,22 @@ class ProfileScreen extends GetView<ProfileController> {
               SizedBox(height: 20.h),
               _KycCard(),
               SizedBox(height: 24.h),
+              _QuickLinks(),
+              SizedBox(height: 24.h),
               _MenuSection('Account', [
-                'Personal Information',
-                'Service Areas',
-                'Bank Details',
-                'KYC Status',
+                _MenuItem('Personal details', AppRoutes.personalDetails),
+                _MenuItem('Case allocation', AppRoutes.allocationPreferences),
+                _MenuItem('Accepted cases', AppRoutes.acceptedCases),
+                _MenuItem('Payments', AppRoutes.paymentHistory),
               ]),
               SizedBox(height: 16.h),
-              _MenuSection('Preferences', [
+              _DemoMenuSection('Preferences', [
                 'Notifications',
                 'Location Services',
                 'Language',
               ]),
               SizedBox(height: 16.h),
-              _MenuSection('Support', [
+              _DemoMenuSection('Support', [
                 'Help Center',
                 'Contact Support',
                 'Terms & Privacy',
@@ -199,8 +203,118 @@ class _KycItem extends StatelessWidget {
   }
 }
 
+class _QuickLinks extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final agent = MockData.agent;
+    return Row(
+      children: [
+        Expanded(
+          child: _InfoChip(
+            icon: Icons.badge_outlined,
+            label: 'Aadhaar',
+            value: agent.aadhaarVerified ? 'Verified' : 'Pending',
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: _InfoChip(
+            icon: Icons.school_outlined,
+            label: 'Certification',
+            value: agent.certificationVerified ? 'Verified' : 'Pending',
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: _InfoChip(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'UPI',
+            value: agent.upiId,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: EdgeInsets.all(12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18.sp, color: AppColors.accent),
+          SizedBox(height: 8.h),
+          Text(label,
+              style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary)),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  const _MenuItem(this.title, this.route);
+  final String title;
+  final String route;
+}
+
 class _MenuSection extends StatelessWidget {
   const _MenuSection(this.title, this.items);
+  final String title;
+  final List<_MenuItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(fontWeight: FontWeight.w700)),
+        SizedBox(height: 10.h),
+        GlassCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: items.asMap().entries.map((e) {
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text(e.value.title),
+                    trailing: Icon(Icons.chevron_right_rounded,
+                        color: AppColors.textTertiary),
+                    onTap: () => Get.toNamed(e.value.route),
+                  ),
+                  if (e.key < items.length - 1)
+                    Divider(height: 1, indent: 16.w),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DemoMenuSection extends StatelessWidget {
+  const _DemoMenuSection(this.title, this.items);
   final String title;
   final List<String> items;
 

@@ -55,25 +55,22 @@ class JobListTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${job.loanType.label}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                      ),
-                      if (job.priority == JobPriority.high)
-                        _PriorityDot(),
-                    ],
+                  Text(
+                    job.verificationType.shortLabel,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                      height: 1.2,
+                    ),
                   ),
+                  if (job.priority == JobPriority.high) ...[
+                    SizedBox(height: 6.h),
+                    _PriorityDot(),
+                  ],
                   SizedBox(height: 3.h),
                   Text(
                     job.applicant.name,
@@ -111,38 +108,15 @@ class JobListTile extends StatelessWidget {
               ),
             ),
             SizedBox(width: 8.w),
-            trailing ??
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      Formatters.currency(job.commission),
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'commission',
-                      style: TextStyle(
-                        fontSize: 9.sp,
-                        color: AppColors.textTertiary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-            if (showChevron && onTap != null) ...[
-              SizedBox(width: 2.w),
+            if (trailing != null) trailing!,
+            if (trailing == null && showChevron && onTap != null)
+              SizedBox(width: 4.w),
+            if (showChevron && onTap != null)
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20.sp,
                 color: AppColors.textTertiary,
               ),
-            ],
           ],
         ),
       ),
@@ -220,15 +194,6 @@ class StatusJobTile extends StatelessWidget {
       trailing: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            Formatters.currency(job.commission),
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-            ),
-          ),
-          SizedBox(height: 6.h),
           _StatusPill(label: statusLabel, color: statusColor),
           if (actionLabel != null) ...[
             SizedBox(height: 6.h),
@@ -269,15 +234,6 @@ class CompletedJobTile extends StatelessWidget {
       trailing: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            Formatters.currency(job.commission),
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
-              color: AppColors.success,
-            ),
-          ),
-          SizedBox(height: 6.h),
           _StatusPill(
             label: isApproved ? 'Approved' : 'Completed',
             color: AppColors.success,
@@ -430,12 +386,16 @@ class _MetaChip extends StatelessWidget {
         children: [
           Icon(icon, size: 11.sp, color: AppColors.textTertiary),
           SizedBox(width: 4.w),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
