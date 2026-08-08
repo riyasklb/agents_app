@@ -165,7 +165,7 @@ class _JobSummaryCard extends StatelessWidget {
             initials: job.applicant.initials,
             imageUrl: job.applicant.avatarUrl,
             size: 56,
-            showBorder: true,
+         //   showBorder: true,
           ),
           SizedBox(width: 14.w),
           Expanded(

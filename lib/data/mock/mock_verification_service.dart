@@ -45,6 +45,7 @@ class MockVerificationService {
     String jobId,
     String mediaId, {
     int? durationSeconds,
+    String? filePath,
   }) async {
     await Future.delayed(const Duration(milliseconds: 600));
     final session = _sessions[jobId];
@@ -53,7 +54,7 @@ class MockVerificationService {
       if (m.id == mediaId) {
         return m.copyWith(
           isCaptured: true,
-          thumbnailPath: 'captured_$mediaId',
+          thumbnailPath: filePath ?? 'captured_$mediaId',
           durationSeconds: durationSeconds,
         );
       }

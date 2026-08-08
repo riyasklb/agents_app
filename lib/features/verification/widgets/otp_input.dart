@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:pinput/pinput.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/mock/mock_verification_service.dart';
@@ -15,48 +15,69 @@ class OtpVerificationCard extends StatefulWidget {
 }
 
 class _OtpVerificationCardState extends State<OtpVerificationCard> {
-  final _controllers = List.generate(6, (_) => TextEditingController());
-  final _focusNodes = List.generate(6, (_) => FocusNode());
+  final _pinController = TextEditingController();
+  final _focusNode = FocusNode();
 
   VerificationController get controller => Get.find<VerificationController>();
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    _pinController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  String get _otp => _controllers.map((c) => c.text).join();
-
-  void _onChanged(int index, String value) {
-    if (value.length > 1) {
-      _controllers[index].text = value[value.length - 1];
-    }
-    if (value.isNotEmpty && index < 5) {
-      _focusNodes[index + 1].requestFocus();
-    }
-    if (_otp.length == 6) {
-      controller.verifyOtp(_otp);
-    }
-    setState(() {});
-  }
-
-  void _onKey(int index, RawKeyEvent event) {
-    if (event is RawKeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.backspace &&
-        _controllers[index].text.isEmpty &&
-        index > 0) {
-      _focusNodes[index - 1].requestFocus();
-    }
+  PinTheme _pinTheme({bool hasError = false}) {
+    return PinTheme(
+      width: 48.w,
+      height: 54.h,
+      textStyle: TextStyle(
+        fontSize: 20.sp,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: hasError
+              ? AppColors.error
+              : AppColors.border.withValues(alpha: 0.8),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.04),
+            blurRadius: 8.r,
+            offset: Offset(0, 2.h),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final defaultTheme = _pinTheme();
+    final focusedTheme = defaultTheme.copyWith(
+      decoration: defaultTheme.decoration?.copyWith(
+        border: Border.all(color: AppColors.accent, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.15),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
+          ),
+        ],
+      ),
+    );
+    final submittedTheme = defaultTheme.copyWith(
+      decoration: defaultTheme.decoration?.copyWith(
+        color: AppColors.accent.withValues(alpha: 0.06),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
+      ),
+    );
+    final errorTheme = _pinTheme(hasError: true);
+
     return Obx(() {
       final session = controller.session.value;
       if (session == null) return const SizedBox.shrink();
@@ -100,6 +121,8 @@ class _OtpVerificationCardState extends State<OtpVerificationCard> {
         );
       }
 
+      final hasError = controller.otpError.value != null;
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -121,74 +144,47 @@ class _OtpVerificationCardState extends State<OtpVerificationCard> {
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(6, (index) {
-              return SizedBox(
-                width: 46.w,
-                height: 52.h,
-                child: RawKeyboardListener(
-                  focusNode: FocusNode(),
-                  onKey: (e) => _onKey(index, e),
-                  child: TextField(
-                    controller: _controllers[index],
-                    focusNode: _focusNodes[index],
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    maxLength: 1,
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: AppColors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: AppColors.border.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(
-                          color: AppColors.accent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (v) => _onChanged(index, v),
-                  ),
-                ),
-              );
-            }),
+          SizedBox(height: 20.h),
+          Center(
+            child: Pinput(
+              length: 6,
+              controller: _pinController,
+              focusNode: _focusNode,
+              enabled: !controller.isVerifyingOtp.value,
+              defaultPinTheme: defaultTheme,
+              focusedPinTheme: focusedTheme,
+              submittedPinTheme: submittedTheme,
+              errorPinTheme: errorTheme,
+              forceErrorState: hasError,
+              keyboardType: TextInputType.number,
+              hapticFeedbackType: HapticFeedbackType.lightImpact,
+              onCompleted: controller.verifyOtp,
+              onChanged: (_) {
+                if (hasError) controller.otpError.value = null;
+              },
+              separatorBuilder: (index) => SizedBox(width: 8.w),
+            ),
           ),
           if (controller.isVerifyingOtp.value) ...[
-            SizedBox(height: 12.h),
+            SizedBox(height: 16.h),
             const Center(
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
           ],
-          if (controller.otpError.value != null) ...[
-            SizedBox(height: 10.h),
-            Text(
-              controller.otpError.value!,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppColors.error,
-                fontWeight: FontWeight.w500,
+          if (hasError) ...[
+            SizedBox(height: 12.h),
+            Center(
+              child: Text(
+                controller.otpError.value!,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
-          SizedBox(height: 12.h),
+          SizedBox(height: 16.h),
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(12.w),
@@ -218,7 +214,12 @@ class _OtpVerificationCardState extends State<OtpVerificationCard> {
             SizedBox(height: 10.h),
             Center(
               child: TextButton(
-                onPressed: controller.isSendingOtp.value ? null : controller.sendOtp,
+                onPressed: controller.isSendingOtp.value
+                    ? null
+                    : () {
+                        _pinController.clear();
+                        controller.sendOtp();
+                      },
                 child: Text(
                   controller.isSendingOtp.value ? 'Resending...' : 'Resend OTP',
                   style: TextStyle(

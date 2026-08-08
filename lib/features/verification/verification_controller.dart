@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/services/app_services.dart';
 import '../../data/models/models.dart';
 import '../dashboard/dashboard_controller.dart';
 import '../earnings/earnings_controller.dart';
 import '../jobs/jobs_controller.dart';
+import 'widgets/media_preview.dart';
 
 class VerificationController extends GetxController {
   VerificationController({required this.jobId});
@@ -118,10 +120,64 @@ class VerificationController extends GetxController {
         await AppServices.verification.updateStep(jobId, s.currentStep - 1);
   }
 
-  Future<void> captureMedia(String mediaId, {int? durationSeconds}) async {
+  Future<void> captureMedia(
+    String mediaId, {
+    int? durationSeconds,
+    String? filePath,
+  }) async {
     session.value = await AppServices.verification.captureMedia(
       jobId,
       mediaId,
+      durationSeconds: durationSeconds,
+      filePath: filePath,
+    );
+  }
+
+  Future<void> capturePhoto(String mediaId) async {
+    final context = Get.context;
+    if (context == null) return;
+
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+
+    final confirmed = await showPhotoCapturePreview(
+      context,
+      filePath: file.path,
+    );
+    if (!confirmed) {
+      await capturePhoto(mediaId);
+      return;
+    }
+
+    await captureMedia(mediaId, filePath: file.path);
+  }
+
+  Future<void> captureVideo({
+    required String filePath,
+    required int durationSeconds,
+  }) async {
+    await captureMedia(
+      'media-006',
+      durationSeconds: durationSeconds,
+      filePath: filePath,
+    );
+  }
+
+  void previewPhoto(String filePath) {
+    final context = Get.context;
+    if (context == null) return;
+    showPhotoViewer(context, filePath);
+  }
+
+  void previewVideo(String filePath, {int? durationSeconds}) {
+    final context = Get.context;
+    if (context == null) return;
+    showVideoViewer(
+      context,
+      filePath: filePath,
       durationSeconds: durationSeconds,
     );
   }

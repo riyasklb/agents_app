@@ -246,7 +246,7 @@ class _OverviewStep extends StatelessWidget {
                 initials: job.applicant.initials,
                 imageUrl: job.applicant.avatarUrl,
                 size: 60,
-                showBorder: true,
+              //  showBorder: true,
               ),
               SizedBox(width: 14.w),
               Expanded(
@@ -397,7 +397,7 @@ class _InfoTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
-      child: Row(
+      child: Row(mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Icon(icon, size: 18.sp, color: AppColors.textTertiary),
           SizedBox(width: 12.w),
@@ -585,92 +585,16 @@ class _PhotosStep extends GetView<VerificationController> {
           final media = session.media.firstWhere((m) => m.id == item.$1);
           return Padding(
             padding: EdgeInsets.only(bottom: 10.h),
-            child: _PhotoCaptureRow(
+            child: VerificationPhotoTile(
+              mediaId: item.$1,
               label: item.$2,
               icon: item.$3,
               isCaptured: media.isCaptured,
-              onCapture: () => controller.captureMedia(item.$1),
+              previewPath: media.thumbnailPath,
             ),
           );
         }),
       ],
-    );
-  }
-}
-
-class _PhotoCaptureRow extends StatelessWidget {
-  const _PhotoCaptureRow({
-    required this.label,
-    required this.icon,
-    required this.isCaptured,
-    required this.onCapture,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool isCaptured;
-  final VoidCallback onCapture;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onCapture,
-        borderRadius: BorderRadius.circular(16.r),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: isCaptured
-                ? AppColors.successLight
-                : AppColors.surface,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: isCaptured
-                  ? AppColors.success.withValues(alpha: 0.3)
-                  : AppColors.border.withValues(alpha: 0.7),
-            ),
-          ),
-          padding: EdgeInsets.all(14.w),
-          child: Row(
-            children: [
-              Container(
-                width: 44.w,
-                height: 44.w,
-                decoration: BoxDecoration(
-                  color: isCaptured
-                      ? AppColors.success.withValues(alpha: 0.15)
-                      : AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  isCaptured ? Icons.check_rounded : icon,
-                  color: isCaptured ? AppColors.success : AppColors.textTertiary,
-                  size: 22.sp,
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Text(
-                isCaptured ? 'Done' : 'Capture',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: isCaptured ? AppColors.success : AppColors.accent,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -698,12 +622,14 @@ class _VerifyStep extends GetView<VerificationController> {
         ),
         SizedBox(height: 10.h),
         if (video.isCaptured)
-          MediaCaptureButton(
+          CapturedVideoCard(
             label: 'Verification Video',
-            isCaptured: true,
-            isVideo: true,
-            durationSeconds: video.durationSeconds ?? 32,
-            onCapture: () {},
+            filePath: video.thumbnailPath ?? '',
+            durationSeconds: video.durationSeconds ?? 0,
+            onRetake: () => Get.toNamed(
+              AppRoutes.videoVerification,
+              arguments: controller.jobId,
+            ),
           )
         else
           AppCard(
@@ -741,14 +667,6 @@ class _VerifyStep extends GetView<VerificationController> {
               ],
             ),
           ),
-        if (!video.isCaptured) ...[
-          SizedBox(height: 10.h),
-          SecondaryButton(
-            label: 'Simulate video capture',
-            onPressed: () =>
-                controller.captureMedia('media-006', durationSeconds: 32),
-          ),
-        ],
         SizedBox(height: 24.h),
         Text(
           'Quick checklist',
