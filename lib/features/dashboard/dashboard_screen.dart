@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/layout_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
@@ -21,9 +22,10 @@ class DashboardScreen extends GetView<DashboardController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Obx(() {
         if (controller.isLoading.value) {
-          return _DashboardSkeleton();
+          return const _DashboardSkeleton();
         }
         return RefreshIndicator(
           onRefresh: controller.refresh,
@@ -33,28 +35,28 @@ class DashboardScreen extends GetView<DashboardController> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
+                  padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Header(),
-                      SizedBox(height: 24.h),
+                      const _Header()
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(begin: -0.05, end: 0),
+                      SizedBox(height: 20.h),
                       if (controller.stats.value != null)
                         _EarningsHero(stats: controller.stats.value!)
                             .animate()
-                            .fadeIn(duration: 500.ms)
-                            .slideY(begin: 0.08, end: 0),
-                      SizedBox(height: 20.h),
-                      if (controller.stats.value != null)
-                        _QuickStats(stats: controller.stats.value!),
+                            .fadeIn(duration: 450.ms, delay: 80.ms)
+                            .slideY(begin: 0.06, end: 0),
                       SizedBox(height: 28.h),
                       SectionHeader(
-                        title: 'Jobs Near You',
-                        actionLabel: 'View All →',
+                        title: 'Nearby',
+                        actionLabel: 'See all',
                         onAction: () =>
                             Get.find<MainController>().changeTab(1),
                       ),
-                      SizedBox(height: 14.h),
+                      SizedBox(height: 12.h),
                     ],
                   ),
                 ),
@@ -70,14 +72,19 @@ class DashboardScreen extends GetView<DashboardController> {
                 )
               else
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 100.h),
+                  padding: EdgeInsets.fromLTRB(
+                    20.w,
+                    0,
+                    20.w,
+                    LayoutConstants.scrollBottomPadding(context),
+                  ),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final job = controller.nearbyJobs[index];
                         return Padding(
-                          padding: EdgeInsets.only(bottom: 14.h),
-                          child: JobCard(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: JobListTile(
                             job: job,
                             onTap: () => Get.toNamed(
                               AppRoutes.jobDetails,
@@ -86,9 +93,9 @@ class DashboardScreen extends GetView<DashboardController> {
                           )
                               .animate()
                               .fadeIn(
-                                delay: Duration(milliseconds: 80 * index),
+                                delay: Duration(milliseconds: 60 * index),
                               )
-                              .slideX(begin: 0.04, end: 0),
+                              .slideY(begin: 0.04, end: 0),
                         );
                       },
                       childCount: controller.nearbyJobs.length,
@@ -104,98 +111,91 @@ class DashboardScreen extends GetView<DashboardController> {
 }
 
 class _Header extends StatelessWidget {
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good morning,',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Text(
-                '${AppConstants.agentFirstName} 👋',
-                style: TextStyle(
-                  fontSize: 26.sp,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Row(
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
                   children: [
-                    Icon(
-                      Icons.location_on_rounded,
-                      size: 14.sp,
-                      color: AppColors.accent,
+                    TextSpan(
+                      text: 'Good morning,\n',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                        fontSize: 15.sp,
+                      ),
                     ),
-                    SizedBox(width: 4.w),
-                    Flexible(
-                      child: Text(
-                        AppConstants.agentLocation,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    TextSpan(
+                      text: '${AppConstants.agentFirstName} 👋',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        fontSize: 26.sp,
                       ),
                     ),
                   ],
                 ),
               ),
+              SizedBox(height: 10.h),
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: 15.sp,
+                    color: AppColors.textTertiary,
+                  ),
+                  SizedBox(width: 4.w),
+                  Flexible(
+                    child: Text(
+                      AppConstants.agentLocation,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-        _IconButton(
-          icon: Icons.notifications_outlined,
+        SizedBox(width: 12.w),
+        GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.notifications),
+          child: Container(
+            width: 44.w,
+            height: 44.w,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.8),
+              ),
+            ),
+            child: Icon(
+              Icons.notifications_none_rounded,
+              size: 22.sp,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ),
       ],
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48.w,
-        height: 48.w,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12.r,
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 22.sp, color: AppColors.textPrimary),
-      ),
     );
   }
 }
@@ -207,40 +207,51 @@ class _EarningsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statItems = [
+      ('${stats.available}', 'Available'),
+      ('${stats.accepted}', 'Active'),
+      ('${stats.completed}', 'Done'),
+      ('${stats.pending}', 'Pending'),
+    ];
+
     return AppCard(
       gradient: AppColors.earningsGradient,
-      padding: EdgeInsets.all(22.w),
+      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 18.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'This Month',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
+              Text(
+                'This month',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
+              const Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.trending_up_rounded,
-                        size: 14.sp, color: Colors.white),
-                    SizedBox(width: 4.w),
+                    Icon(
+                      Icons.north_east_rounded,
+                      size: 12.sp,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 3.w),
                     Text(
-                      '+${stats.monthlyGrowth}%',
+                      '${stats.monthlyGrowth}%',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -252,25 +263,65 @@ class _EarningsHero extends StatelessWidget {
           Text(
             Formatters.currency(stats.monthlyEarnings),
             style: TextStyle(
-              fontSize: 36.sp,
+              fontSize: 34.sp,
               fontWeight: FontWeight.w800,
               color: Colors.white,
-              letterSpacing: -1,
+              letterSpacing: -1.2,
+              height: 1.1,
             ),
           ),
-          SizedBox(height: 4.h),
-          Text(
-            'from last month',
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 16.h),
           MiniLineChart(
             data: stats.weeklyEarnings,
-            height: 48.h,
-            color: Colors.white.withValues(alpha: 0.9),
+            height: 44.h,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+          SizedBox(height: 18.h),
+          Divider(
+            color: Colors.white.withValues(alpha: 0.12),
+            height: 1,
+          ),
+          SizedBox(height: 14.h),
+          Row(
+            children: statItems.map((item) {
+              final isLast = item == statItems.last;
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            item.$1,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              height: 1,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            item.$2,
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.white.withValues(alpha: 0.65),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 1,
+                        height: 28.h,
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -278,57 +329,9 @@ class _EarningsHero extends StatelessWidget {
   }
 }
 
-class _QuickStats extends StatelessWidget {
-  const _QuickStats({required this.stats});
-
-  final DashboardStats stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      ('Available', '${stats.available}', AppColors.accent),
-      ('Accepted', '${stats.accepted}', AppColors.warning),
-      ('Completed', '${stats.completed}', AppColors.success),
-      ('Pending', '${stats.pending}', AppColors.textSecondary),
-    ];
-
-    return Row(
-      children: items.map((item) {
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: item != items.last ? 10.w : 0),
-            child: GlassCard(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 14.h),
-              child: Column(
-                children: [
-                  Text(
-                    item.$2,
-                    style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.w800,
-                      color: item.$3,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    item.$1,
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
 class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
@@ -337,20 +340,39 @@ class _DashboardSkeleton extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(20.w),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: 200.w,
+              height: 56.h,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Container(
+              height: 200.h,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Container(
+              width: 100.w,
+              height: 20.h,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            SizedBox(height: 12.h),
             Container(
               height: 80.h,
               decoration: BoxDecoration(
                 color: AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(16.r),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Container(
-              height: 160.h,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(20.r),
               ),
             ),
           ],

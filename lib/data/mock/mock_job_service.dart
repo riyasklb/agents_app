@@ -63,6 +63,14 @@ class MockJobService {
     return _jobs[index];
   }
 
+  Future<VerificationJob> rejectJob(String jobId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _jobs.indexWhere((j) => j.id == jobId);
+    if (index == -1) throw Exception('Job not found');
+    _jobs[index] = _jobs[index].copyWith(status: JobStatus.rejected);
+    return _jobs[index];
+  }
+
   Future<VerificationJob> submitJob(String jobId) async {
     await Future.delayed(const Duration(milliseconds: 1000));
     final index = _jobs.indexWhere((j) => j.id == jobId);

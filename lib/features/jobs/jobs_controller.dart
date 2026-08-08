@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/routes/app_routes.dart';
 import '../../core/services/app_services.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/models.dart';
 
@@ -11,6 +13,7 @@ class JobsController extends GetxController
   final tabIndex = 0.obs;
   final searchQuery = ''.obs;
   final selectedFilter = RxnString();
+  final processingJobIds = <String>{}.obs;
 
   final availableJobs = <VerificationJob>[].obs;
   final activeJobs = <VerificationJob>[].obs;
@@ -26,12 +29,14 @@ class JobsController extends GetxController
     'Business',
   ];
 
+  static const tabLabels = ['Available', 'Active', 'Submitted', 'Done'];
+
   late final TabController tabController;
 
   @override
   void onInit() {
     super.onInit();
-    tabController = TabController(length: 4, vsync: this);
+    tabController = TabController(length: tabLabels.length, vsync: this);
     tabController.addListener(() {
       if (!tabController.indexIsChanging) {
         tabIndex.value = tabController.index;
@@ -82,6 +87,8 @@ class JobsController extends GetxController
     return jobs;
   }
 
+  bool isProcessing(String jobId) => processingJobIds.contains(jobId);
+
   void setSearch(String query) {
     searchQuery.value = query;
     update(['available']);
@@ -99,9 +106,35 @@ class JobsController extends GetxController
   Future<VerificationJob?> getJob(String id) =>
       AppServices.jobs.getJobById(id);
 
-  Future<VerificationJob> acceptJob(String id) async {
-    final job = await AppServices.jobs.acceptJob(id);
-    await loadAll();
-    return job;
+  Future<void> acceptJob(String id) async {
+    if (isProcessing(id)) return;
+    processingJobIds.add(id);
+    try {
+      await AppServices.jobs.acceptJob(id);
+      await loadAll();
+      Get.toNamed(AppRoutes.jobAccepted, arguments: id);
+    } finally {
+      processingJobIds.remove(id);
+    }
+  }
+
+  Future<void> rejectJob(String id) async {
+    if (isProcessing(id)) return;
+    processingJobIds.add(id);
+    try {
+      await AppServices.jobs.rejectJob(id);
+      await loadAll();
+      Get.snackbar(
+        'Job declined',
+        'This assignment has been removed from your list.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: AppColors.primary,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    } finally {
+      processingJobIds.remove(id);
+    }
   }
 }

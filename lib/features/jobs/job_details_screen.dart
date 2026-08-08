@@ -45,6 +45,23 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     Get.toNamed(AppRoutes.jobAccepted, arguments: jobId);
   }
 
+  Future<void> _reject() async {
+    await AppServices.jobs.rejectJob(jobId);
+    if (Get.isRegistered<JobsController>()) {
+      await Get.find<JobsController>().loadAll();
+    }
+    Get.back<void>();
+    Get.snackbar(
+      'Job declined',
+      'This assignment has been removed from your list.',
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      backgroundColor: AppColors.primary,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,9 +88,25 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           return const SizedBox.shrink();
         }
         return StickyBottomBar(
-          child: PrimaryButton(
-            label: 'Accept Assignment',
-            onPressed: _accept,
+          child: Row(
+            children: [
+              Expanded(
+                child: SecondaryButton(
+                  label: 'Reject',
+                  icon: Icons.close_rounded,
+                  onPressed: _reject,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                flex: 2,
+                child: PrimaryButton(
+                  label: 'Accept',
+                  icon: Icons.check_rounded,
+                  onPressed: _accept,
+                ),
+              ),
+            ],
           ),
         );
       }),
@@ -110,7 +143,11 @@ class _Content extends StatelessWidget {
             title: 'Applicant',
             child: Row(
               children: [
-                AvatarWidget(initials: job.applicant.initials),
+                AvatarWidget(
+                  initials: job.applicant.initials,
+                  imageUrl: job.applicant.avatarUrl,
+                  size: 52,
+                ),
                 SizedBox(width: 12.w),
                 Text(
                   job.applicant.name,

@@ -7,6 +7,7 @@ class Agent {
     required this.phone,
     required this.email,
     required this.avatarInitials,
+    required this.avatarUrl,
     required this.rating,
     required this.totalJobs,
     required this.successRate,
@@ -22,6 +23,7 @@ class Agent {
   final String phone;
   final String email;
   final String avatarInitials;
+  final String avatarUrl;
   final double rating;
   final int totalJobs;
   final double successRate;
@@ -53,6 +55,7 @@ class Applicant {
     required this.phone,
     required this.address,
     required this.initials,
+    required this.avatarUrl,
   });
 
   final String id;
@@ -60,6 +63,7 @@ class Applicant {
   final String phone;
   final String address;
   final String initials;
+  final String avatarUrl;
 }
 
 class VerificationJob {

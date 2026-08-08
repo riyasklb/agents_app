@@ -18,6 +18,7 @@ class PremiumBackground extends StatelessWidget {
         Container(
           decoration: const BoxDecoration(
             gradient: AppColors.meshGradient,
+           
           ),
         ),
         Positioned(
@@ -433,12 +434,80 @@ class AvatarWidget extends StatelessWidget {
   const AvatarWidget({
     super.key,
     required this.initials,
+    this.imageUrl,
     this.size = 44,
+    this.gradient,
+    this.showBorder = false,
+  });
+
+  final String initials;
+  final String? imageUrl;
+  final double size;
+  final Gradient? gradient;
+  final bool showBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(size.w * 0.32);
+
+    return Container(
+      width: size.w,
+      height: size.w,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: showBorder
+            ? Border.all(color: Colors.white, width: 3.w)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.2),
+            blurRadius: 8.r,
+            offset: Offset(0, 3.h),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl != null && imageUrl!.isNotEmpty
+          ? Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return _InitialsFallback(
+                  initials: initials,
+                  size: size,
+                  gradient: gradient,
+                  borderRadius: radius,
+                );
+              },
+              errorBuilder: (_, __, ___) => _InitialsFallback(
+                initials: initials,
+                size: size,
+                gradient: gradient,
+                borderRadius: radius,
+              ),
+            )
+          : _InitialsFallback(
+              initials: initials,
+              size: size,
+              gradient: gradient,
+              borderRadius: radius,
+            ),
+    );
+  }
+}
+
+class _InitialsFallback extends StatelessWidget {
+  const _InitialsFallback({
+    required this.initials,
+    required this.size,
+    required this.borderRadius,
     this.gradient,
   });
 
   final String initials;
   final double size;
+  final BorderRadius borderRadius;
   final Gradient? gradient;
 
   @override
@@ -448,14 +517,7 @@ class AvatarWidget extends StatelessWidget {
       height: size.w,
       decoration: BoxDecoration(
         gradient: gradient ?? AppColors.accentGradient,
-        borderRadius: BorderRadius.circular(size.w * 0.32),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accent.withValues(alpha: 0.25),
-            blurRadius: 8.r,
-            offset: Offset(0, 3.h),
-          ),
-        ],
+        borderRadius: borderRadius,
       ),
       child: Center(
         child: Text(

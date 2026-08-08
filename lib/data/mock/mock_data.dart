@@ -1,3 +1,6 @@
+import 'package:agents_app/core/constants/avatar_urls.dart';
+
+
 import '../models/enums.dart';
 import '../models/models.dart';
 
@@ -10,13 +13,14 @@ class MockData {
     phone: '+91 98765 43210',
     email: 'riyas.k@verifix.in',
     avatarInitials: 'RK',
+    avatarUrl: AvatarUrls.agent,
     rating: 4.8,
     totalJobs: 128,
     successRate: 96,
     totalEarned: 42680,
     location: 'Thrissur, Kerala',
     isVerified: true,
-    kycStatus: const AgentKycStatus(
+    kycStatus:  AgentKycStatus(
       identityVerified: true,
       bankAccountVerified: true,
       backgroundCheckCompleted: true,
@@ -31,12 +35,13 @@ class MockData {
       applicationId: 'VX-2026-008421',
       loanType: LoanType.homeLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant: Applicant(
         id: 'app-001',
         name: 'Arjun Mathew',
         phone: '+91 98470 12345',
         address: 'Mannuthy, Thrissur, Kerala 680651',
         initials: 'AM',
+        avatarUrl: AvatarUrls.forApplicant('app-001'),
       ),
       location: 'Mannuthy, Thrissur',
       distanceKm: 2.4,
@@ -60,12 +65,13 @@ class MockData {
       applicationId: 'VX-2026-008422',
       loanType: LoanType.personalLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-002',
         name: 'Anjali Thomas',
         phone: '+91 98460 54321',
         address: 'Ollur, Thrissur, Kerala 680306',
         initials: 'AT',
+        avatarUrl: AvatarUrls.forApplicant('app-002'),
       ),
       location: 'Ollur, Thrissur',
       distanceKm: 4.8,
@@ -87,12 +93,13 @@ class MockData {
       applicationId: 'VX-2026-008423',
       loanType: LoanType.businessLoan,
       verificationType: VerificationType.businessAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-003',
         name: 'Sarah Joseph',
         phone: '+91 98450 98765',
         address: 'Poothole, Thrissur, Kerala 680004',
         initials: 'SJ',
+        avatarUrl: AvatarUrls.forApplicant('app-003'),
       ),
       location: 'Poothole, Thrissur',
       distanceKm: 3.2,
@@ -115,12 +122,13 @@ class MockData {
       applicationId: 'VX-2026-008424',
       loanType: LoanType.homeLoan,
       verificationType: VerificationType.propertyVerification,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-004',
         name: 'Vishnu Nair',
         phone: '+91 98440 11223',
         address: 'Guruvayur, Thrissur, Kerala 680101',
         initials: 'VN',
+        avatarUrl: AvatarUrls.forApplicant('app-004'),
       ),
       location: 'Guruvayur, Thrissur',
       distanceKm: 5.6,
@@ -143,12 +151,13 @@ class MockData {
       applicationId: 'VX-2026-008425',
       loanType: LoanType.personalLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-005',
         name: 'Meera Krishnan',
         phone: '+91 98430 44556',
         address: 'Kodungallur, Thrissur, Kerala 680664',
         initials: 'MK',
+        avatarUrl: AvatarUrls.forApplicant('app-005'),
       ),
       location: 'Kodungallur, Thrissur',
       distanceKm: 6.1,
@@ -170,12 +179,13 @@ class MockData {
       applicationId: 'VX-2026-008410',
       loanType: LoanType.homeLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-006',
         name: 'Rajesh Kumar',
         phone: '+91 98420 77889',
         address: 'Wadakkanchery, Thrissur, Kerala 680582',
         initials: 'RK',
+        avatarUrl: AvatarUrls.forApplicant('app-006'),
       ),
       location: 'Wadakkanchery, Thrissur',
       distanceKm: 8.2,
@@ -197,12 +207,13 @@ class MockData {
       applicationId: 'VX-2026-008395',
       loanType: LoanType.businessLoan,
       verificationType: VerificationType.businessAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-007',
         name: 'Priya Menon',
         phone: '+91 98410 99001',
         address: 'Irinjalakuda, Thrissur, Kerala 680121',
         initials: 'PM',
+        avatarUrl: AvatarUrls.forApplicant('app-007'),
       ),
       location: 'Irinjalakuda, Thrissur',
       distanceKm: 7.5,
@@ -223,12 +234,13 @@ class MockData {
       applicationId: 'VX-2026-008380',
       loanType: LoanType.homeLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-008',
         name: 'Arjun Mathew',
         phone: '+91 98470 12345',
         address: 'Mannuthy, Thrissur, Kerala 680651',
         initials: 'AM',
+        avatarUrl: AvatarUrls.forApplicant('app-001'),
       ),
       location: 'Mannuthy, Thrissur',
       distanceKm: 2.4,
@@ -251,12 +263,13 @@ class MockData {
       applicationId: 'VX-2026-008365',
       loanType: LoanType.personalLoan,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-009',
         name: 'Deepak Pillai',
         phone: '+91 98400 22334',
         address: 'Chalakudy, Thrissur, Kerala 680307',
         initials: 'DP',
+        avatarUrl: AvatarUrls.forApplicant('app-009'),
       ),
       location: 'Chalakudy, Thrissur',
       distanceKm: 4.3,
@@ -278,12 +291,13 @@ class MockData {
       applicationId: 'VX-2026-008350',
       loanType: LoanType.residenceVerification,
       verificationType: VerificationType.residentialAddress,
-      applicant: const Applicant(
+      applicant:  Applicant(
         id: 'app-010',
         name: 'Lakshmi Devi',
         phone: '+91 98390 55667',
         address: 'Kunnamkulam, Thrissur, Kerala 680503',
         initials: 'LD',
+        avatarUrl: AvatarUrls.forApplicant('app-010'),
       ),
       location: 'Kunnamkulam, Thrissur',
       distanceKm: 9.0,
@@ -318,7 +332,7 @@ class MockData {
     availableBalance: 5240,
     pendingAmount: 1850,
     totalEarned: 42680,
-    dailyEarnings: const [
+    dailyEarnings:  [
       DailyEarning(day: 'Mon', amount: 450),
       DailyEarning(day: 'Tue', amount: 800),
       DailyEarning(day: 'Wed', amount: 300),
@@ -410,37 +424,37 @@ class MockData {
   ];
 
   static List<VerificationMedia> defaultMediaItems() => [
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-001',
       type: MediaType.document,
       label: 'Government ID',
       isCaptured: false,
     ),
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-002',
       type: MediaType.photo,
       label: 'Applicant Photo',
       isCaptured: false,
     ),
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-003',
       type: MediaType.photo,
       label: 'Property Photo',
       isCaptured: false,
     ),
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-004',
       type: MediaType.photo,
       label: 'Entrance Photo',
       isCaptured: false,
     ),
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-005',
       type: MediaType.photo,
       label: 'Name Plate',
       isCaptured: false,
     ),
-    const VerificationMedia(
+     VerificationMedia(
       id: 'media-006',
       type: MediaType.video,
       label: 'Verification Video',
@@ -449,17 +463,17 @@ class MockData {
   ];
 
   static List<VerificationQuestion> defaultQuestions() => [
-    const VerificationQuestion(
+     VerificationQuestion(
       id: 'q-001',
       category: 'Applicant Verification',
       question: 'Was the applicant available at the location?',
     ),
-    const VerificationQuestion(
+     VerificationQuestion(
       id: 'q-002',
       category: 'Address Verification',
       question: 'Does the provided address match the visited location?',
     ),
-    const VerificationQuestion(
+     VerificationQuestion(
       id: 'q-003',
       category: 'Property',
       question: 'Does the applicant currently reside at this property?',

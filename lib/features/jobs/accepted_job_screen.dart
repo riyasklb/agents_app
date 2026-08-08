@@ -81,6 +81,12 @@ class _AcceptedJobScreenState extends State<AcceptedJobScreen> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8.h),
+                  AvatarWidget(
+                    initials: job.applicant.initials,
+                    imageUrl: job.applicant.avatarUrl,
+                    size: 64,
+                  ),
+                  SizedBox(height: 12.h),
                   Text(
                     job.applicant.name,
                     style: TextStyle(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../core/constants/layout_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -14,10 +15,16 @@ class ProfileScreen extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Obx(() {
         final agent = controller.agent.value;
         return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 100.h),
+          padding: EdgeInsets.fromLTRB(
+            20.w,
+            12.h,
+            20.w,
+            LayoutConstants.scrollBottomPadding(context),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -29,7 +36,12 @@ class ProfileScreen extends GetView<ProfileController> {
                 padding: EdgeInsets.all(22.w),
                 child: Column(
                   children: [
-                    AvatarWidget(initials: agent.avatarInitials, size: 76),
+                    AvatarWidget(
+                      initials: agent.avatarInitials,
+                      imageUrl: agent.avatarUrl,
+                      size: 88,
+                      showBorder: true,
+                    ),
                     SizedBox(height: 14.h),
                     Text(agent.name,
                         style: TextStyle(

@@ -123,6 +123,15 @@ class _ApplicantStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Center(
+          child: AvatarWidget(
+            initials: job.applicant.initials,
+            imageUrl: job.applicant.avatarUrl,
+            size: 72,
+            showBorder: true,
+          ),
+        ),
+        SizedBox(height: 16.h),
         Text('Applicant Details',
             style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w700)),
         SizedBox(height: 16.h),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../core/constants/layout_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/charts.dart';
@@ -16,6 +17,7 @@ class EarningsScreen extends GetView<EarningsController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Obx(() {
         if (controller.isLoading.value) return const _Skeleton();
         final data = controller.summary.value;
@@ -108,7 +110,12 @@ class EarningsScreen extends GetView<EarningsController> {
                 ),
               ),
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 100.h),
+                padding: EdgeInsets.fromLTRB(
+                  20.w,
+                  0,
+                  20.w,
+                  LayoutConstants.scrollBottomPadding(context),
+                ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => Padding(
